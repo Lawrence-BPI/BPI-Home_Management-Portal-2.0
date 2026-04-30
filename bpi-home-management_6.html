@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BPI Home Management Portal · Inspection Analyzer</title>
+<meta name="description" content="Buffalo Property Inspections Home Management Portal — AI Powered Inspection Report Analyzer for the DFW area." />
+
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Tailwind config: brand colors + fonts -->
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream:     '#F7F2E7',
+          creamDeep: '#EFE8D6',
+          ivory:     '#FCFAF4',
+          ink:       '#1A1612',
+          inkSoft:   '#3D352C',
+          inkMute:   '#7A6E5F',
+          inkFaint:  '#B8AC97',
+          gold:      '#D4A23A',
+          goldDeep:  '#A87C20',
+          goldSoft:  '#F2DDA0',
+          redDeep:   '#8B2A1F',
+          redSoft:   '#E8C9C2',
+          amber:     '#C97324',
+          amberSoft: '#F0D5B0',
+          blue:      '#2F4858',
+          blueSoft:  '#D4DCE2',
+          sage:      '#5A6B4A',
+          sageSoft:  '#D4DBC8',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'Times New Roman', 'serif'],
+          body:    ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          mono:    ['"JetBrains Mono"', 'Courier New', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Manrope:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+
+<!-- Lucide icons (vanilla) -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<style>
+  html, body {
+    background: #FCFAF4;
+    color: #1A1612;
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    overflow-x: hidden;
+    touch-action: manipulation;          /* faster taps on mobile */
+    -webkit-text-size-adjust: 100%;      /* don't auto-inflate text in landscape */
+  }
+  /* Brand-tinted tap highlight on iOS/Android */
+  * { -webkit-tap-highlight-color: rgba(212, 162, 58, 0.15); }
+  /* Allow form inputs to use their default selection */
+  input, textarea, select { touch-action: auto; }
+
+  /* Fraunces fine-tuning helpers */
+  .fr-display    { font-family: 'Fraunces', serif; font-variation-settings: '"opsz" 96, "WONK" 1, "SOFT" 30'; font-weight: 500; letter-spacing: -0.02em; }
+  .fr-headline   { font-family: 'Fraunces', serif; font-variation-settings: '"opsz" 48, "WONK" 1'; font-weight: 400; letter-spacing: -0.02em; }
+  .fr-num        { font-family: 'Fraunces', serif; font-variation-settings: '"opsz" 96, "WONK" 1'; font-weight: 300; }
+  .fr-italic     { font-family: 'Fraunces', serif; font-variation-settings: '"opsz" 14'; font-style: italic; font-weight: 400; }
+  .fr-tag        { font-family: 'Fraunces', serif; font-variation-settings: '"opsz" 14, "WONK" 1'; font-weight: 700; }
+
+  .uppercase-wide { text-transform: uppercase; letter-spacing: 0.04em; }
+  .uppercase-tight { text-transform: uppercase; letter-spacing: 0.18em; }
+  .uppercase-x    { text-transform: uppercase; letter-spacing: 0.25em; }
+
+  /* Lucide sizing default */
+  [data-lucide] { width: 14px; height: 14px; stroke-width: 2; }
+
+  /* Loading screen progress glow */
+  .progress-fill {
+    background: linear-gradient(90deg, #A87C20, #D4A23A);
+    box-shadow: 0 0 12px rgba(212, 162, 58, 0.5);
+    transition: width 0.2s linear;
+  }
+
+  /* Ping ring around logo */
+  @keyframes brand-ping {
+    0%   { transform: scale(1);   opacity: 0.7; }
+    80%  { transform: scale(1.3); opacity: 0; }
+    100% { transform: scale(1.3); opacity: 0; }
+  }
+  .brand-ping { animation: brand-ping 2.5s cubic-bezier(0,0,0.2,1) infinite; }
+
+  /* Spinner */
+  @keyframes spinit { to { transform: rotate(360deg); } }
+  .spinit { animation: spinit 1s linear infinite; }
+
+  /* Smooth fade for phase transitions */
+  .fade-in { animation: fadein 0.5s ease both; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Disclaimer modal */
+  .modal-backdrop {
+    background: rgba(26, 22, 18, 0.88);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .modal-card {
+    box-shadow: 0 30px 60px rgba(26, 22, 18, 0.5);
+  }
+
+  /* Chevron rotate */
+  .row-open .chev { transform: rotate(180deg); background-color: #D4A23A; }
+  .row-open .chev [data-lucide] { color: #1A1612; }
+
+  /* Severity left bar colors via class */
+  .sev-safety .sev-bar       { background: #8B2A1F; }
+  .sev-high .sev-bar         { background: #C97324; }
+  .sev-standard .sev-bar     { background: #D4A23A; }
+  .sev-maintenance .sev-bar  { background: #2F4858; }
+  .sev-diy .sev-bar          { background: #5A6B4A; }
+
+  /* Hide scrollbar styling but keep scroll */
+  .nice-scroll::-webkit-scrollbar { width: 6px; }
+  .nice-scroll::-webkit-scrollbar-track { background: transparent; }
+  .nice-scroll::-webkit-scrollbar-thumb { background: rgba(26,22,18,0.15); border-radius: 3px; }
+
+  /* Mobile: invisible scrollbars on horizontal filter pill scrollers */
+  .overflow-x-auto::-webkit-scrollbar { display: none; height: 0; }
+  .overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Subtle hover lift (desktop only — disabled on touch) */
+  .hover-lift { transition: transform 0.2s ease; }
+  @media (hover: hover) {
+    .hover-lift:hover { transform: translateY(-2px); }
+  }
+
+  /* Make iOS form controls inherit our typography */
+  input, button, select, textarea { font-family: inherit; font-size: inherit; }
+  input[type="text"], input[type="search"], select { font-size: 16px; }  /* prevents iOS auto-zoom */
+  @media (min-width: 1024px) {
+    input[type="text"], input[type="search"] { font-size: 12px; }
+    select { font-size: 11px; }
+  }
+
+  /* Print: hide modals */
+  @media print {
+    #modal-host, #loading-screen { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Paper grain overlay -->
+<svg class="fixed inset-0 pointer-events-none opacity-[0.025] z-50" width="100%" height="100%" aria-hidden="true">
+  <filter id="noise">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"></feTurbulence>
+    <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0"></feColorMatrix>
+  </filter>
+  <rect width="100%" height="100%" filter="url(#noise)"></rect>
+</svg>
+
+<!-- Phase hosts — JS renders the appropriate screen into the right host -->
+<div id="upload-host"></div>
+<div id="loading-host"></div>
+
+<!-- Main app shell (filled by JS after disclaimer accepted) -->
+<main id="app-root" hidden></main>
+
+<!-- Modal host (filled by JS) -->
+<div id="modal-host"></div>
+
+<!-- Toast / error host -->
+<div id="toast-host"></div>
+
+<script>
+/* ===========================================================================
+   LOGO (real BPI logo embedded as base64)
+   ======================================================================== */
+const LOGO_DATA_URL = 'data:image/webp;base64,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';
+
+/* ===========================================================================
+   DATA
+   ======================================================================== */
+const SYSTEMS = {
+  structural: { label: 'Structural',           icon: 'building-2' },
+  electrical: { label: 'Electrical',           icon: 'zap'        },
+  hvac:       { label: 'HVAC',                 icon: 'wind'       },
+  plumbing:   { label: 'Plumbing',             icon: 'droplets'   },
+  appliances: { label: 'Appliances',           icon: 'settings'   },
+  optional:   { label: 'Exterior & Optional',  icon: 'sprout'     },
+};
+
+const SEVERITY = {
+  safety: {
+    label: 'Safety', short: 'Fix Now', weight: 4,
+    bg: '#8B2A1F', soft: '#E8C9C2', text: '#FFFFFF', icon: 'shield-alert',
+  },
+  high: {
+    label: 'High Priority', short: 'Negotiate', weight: 3,
+    bg: '#C97324', soft: '#F0D5B0', text: '#FFFFFF', icon: 'alert-triangle',
+  },
+  standard: {
+    label: 'Standard', short: 'Plan', weight: 2,
+    bg: '#D4A23A', soft: '#F2DDA0', text: '#1A1612', icon: 'wrench',
+  },
+  maintenance: {
+    label: 'Maintenance', short: 'Monitor', weight: 1,
+    bg: '#2F4858', soft: '#D4DCE2', text: '#FFFFFF', icon: 'eye',
+  },
+  diy: {
+    label: 'DIY', short: 'Weekend', weight: 0,
+    bg: '#5A6B4A', soft: '#D4DBC8', text: '#FFFFFF', icon: 'hammer',
+  },
+};
+
+/* ===========================================================================
+   CUSTOMER DATA — empty by default
+   ----------------------------------------------------------------------------
+   This object holds the currently-loaded client profile. It starts empty and
+   is populated when a client uploads their inspection report PDF. Profiles
+   are saved to localStorage so clients have private access to past profiles.
+
+   In production, the PDF upload would trigger backend extraction of the
+   inspector's findings. In this client-only demo, uploading a PDF populates
+   `data` with the DEMO_DATA sample so the experience is complete.
+   ======================================================================== */
+let data = {
+  property:    { address: '', city: '', state: '', zip: '', type: '' },
+  inspection:  { reportNumber: '', date: '', time: '', inspector: '', trecLicense: '' },
+  client:      { name: '', initials: '' },
+  deficiencies: [],
+};
+
+/* Demo dataset — generic placeholder data so no real client/property/inspector
+   info is exposed. Replace with real backend integration in production. */
+const DEMO_DATA = {
+  property:    { address: '1234 Sample Lane',     city: 'Anytown',  state: 'Texas', zip: '75001', type: 'Single-Family · 2-Story · Slab' },
+  inspection:  { reportNumber: 'BPI-DEMO-0001',   date: 'Sample Date', time: '—', inspector: 'Sample Inspector', trecLicense: 'DEMO' },
+  client:      { name: 'Billy Homebuyer',         initials: 'BH' },
+  deficiencies: [
+  { id: 's1',  system: 'structural', section: 'Foundations',          title: 'Minor foundation cracks',        desc: 'Surface shrinkage cracks observed in slab — common as concrete ages. No structural concerns at time of inspection.', severity: 'maintenance', costLow: 400,  costHigh: 700,  time: 'Eval visit', pro: 'Structural Engineer',     plain: 'Hairline cracks in concrete are normal. A structural engineer can verify nothing is moving — most of the time, the answer is just "monitor it."', ref: 'I.A.1' },
+  { id: 's2',  system: 'structural', section: 'Foundations',          title: 'Wedge cracks at slab corner',     desc: 'Wedge-shaped cracking observed at foundation corner. Typically cosmetic unless displacement develops.', severity: 'standard', costLow: 150,  costHigh: 300,  time: '2 hrs',      pro: 'Mason / Handyman',         plain: 'Cosmetic crack at a corner — seal it to keep water out and watch it. If it grows, escalate.', ref: 'I.A.2' },
+  { id: 's3',  system: 'structural', section: 'Foundations',          title: 'Cracked perimeter beam skim coat', desc: 'Cosmetic skim coat covering foundation perimeter beam shows cracking. Moisture penetration may worsen deterioration.', severity: 'standard', costLow: 200, costHigh: 500, time: 'Half day', pro: 'Foundation/Concrete Pro',  plain: 'The decorative parge coat on the foundation is cracked. Patching it back up keeps water from sneaking in.', ref: 'I.A.3' },
+  { id: 's4',  system: 'structural', section: 'Foundations',          title: 'Low/eroded soil at foundation',   desc: 'Soil low or eroded around foundation. Insufficient coverage allows water collection and may contribute to settlement.', severity: 'high', costLow: 300, costHigh: 800, time: '1 day',  pro: 'Landscaper',                plain: 'Soil has dropped below where it should be against your foundation. Bringing dirt in and sloping it away from the house protects the slab.', ref: 'I.A.4' },
+  { id: 's5',  system: 'structural', section: 'Grading & Drainage',   title: 'Soil erosion near foundation',    desc: 'Signs of erosion noted near the foundation, often caused by water runoff.', severity: 'standard', costLow: 300, costHigh: 700, time: '1 day',         pro: 'Landscaper',                plain: 'Water is washing soil away. Fixed with regrading and better gutter management.', ref: 'I.B.1' },
+  { id: 's6',  system: 'structural', section: 'Grading & Drainage',   title: 'Dry cracking in yard soil',       desc: 'Shrinkage cracks in expansive clay soil from moisture loss. May contribute to foundation movement.',   severity: 'diy',     costLow: 50,  costHigh: 150, time: 'Setup',         pro: 'DIY — Soaker Hose',         plain: 'North Texas clay shrinks when dry, which moves your foundation. A simple watering schedule (or soaker hose) keeps things stable.', ref: 'I.B.2' },
+  { id: 's7',  system: 'structural', section: 'Grading & Drainage',   title: 'Downspout pools near foundation', desc: 'Splash block needs adjustment so water does not pool near foundation. Connect downspout properly.',     severity: 'diy',     costLow: 20,  costHigh: 80,  time: '30 min',        pro: 'DIY',                       plain: 'Move the splash block or add an extension so the downspout sends water 4+ feet away from the house.', ref: 'I.B.3' },
+  { id: 's8',  system: 'structural', section: 'Grading & Drainage',   title: 'Gutters filled with debris',      desc: 'Gutters and downspouts contain leaves and debris. Clean to allow proper drainage.',                    severity: 'diy',     costLow: 150, costHigh: 300, time: '2 hrs',         pro: 'Gutter Cleaning Service',   plain: 'Clogged gutters = water spilling over the edge right onto your foundation. Clean twice a year.', ref: 'I.B.4' },
+  { id: 's9',  system: 'structural', section: 'Roof Coverings',       title: 'Damaged roof shingles',           desc: 'General damage to roof coverings observed. May allow further deterioration and water penetration.',     severity: 'high',    costLow: 400, costHigh: 1200, time: 'Half day',     pro: 'Licensed Roofer',           plain: 'Damaged shingles are how leaks start. Worth getting a roofer out before signing.', ref: 'I.C.1' },
+  { id: 's10', system: 'structural', section: 'Roof Coverings',       title: 'Missing shingles',                desc: 'Areas observed missing sufficient coverings.',                                                          severity: 'high',    costLow: 300, costHigh: 900,  time: 'Half day',     pro: 'Licensed Roofer',           plain: 'Bare spots on the roof — water gets in fast. Fix before the next storm.', ref: 'I.C.2' },
+  { id: 's11', system: 'structural', section: 'Roof Coverings',       title: 'Wood siding contacting shingles', desc: 'Wood siding in contact with roof shingles in one or more locations. May lead to wood deterioration.',  severity: 'standard', costLow: 250, costHigh: 600, time: 'Half day',     pro: 'Carpenter',                 plain: 'Wood touching roof = wicks moisture and rots. A carpenter trims it back and adds flashing.', ref: 'I.C.3' },
+  { id: 's12', system: 'structural', section: 'Roof Coverings',       title: 'Lifted shingles',                 desc: 'Lifted shingles observed in one or more locations on the roof.',                                        severity: 'high',    costLow: 300, costHigh: 800,  time: 'Half day',     pro: 'Licensed Roofer',           plain: 'Wind has lifted shingles loose. They can blow off in the next storm and let water in.', ref: 'I.C.4' },
+  { id: 's13', system: 'structural', section: 'Roof Coverings',       title: 'Damaged flashing',                desc: 'Damaged flashing at roof penetrations and/or wall transitions. May allow moisture intrusion.',         severity: 'high',    costLow: 400, costHigh: 1000, time: 'Half day',     pro: 'Licensed Roofer',           plain: 'Flashing is the metal that seals roof joints. When it fails, water finds its way in fast.', ref: 'I.D.5' },
+  { id: 's14', system: 'structural', section: 'Walls',                title: 'Minor brick/stone wall cracks',   desc: 'Expansion and contraction (thermal) cracks in exterior brick/stone veneer. Repair and monitor.',        severity: 'standard', costLow: 300, costHigh: 800, time: '1 day',        pro: 'Mason',                     plain: 'Brick expands and contracts with temperature — small cracks are normal. Tuckpoint and watch them.', ref: 'I.E.1' },
+  { id: 's15', system: 'structural', section: 'Walls',                title: 'Frieze board separation',         desc: 'Separations between trim/frieze boards and exterior wall cladding — indication of movement or settlement.', severity: 'standard', costLow: 400, costHigh: 1200, time: '1 day',     pro: 'Carpenter',                 plain: 'Trim is pulling away from the wall. Reseal and refasten — and have the foundation checked if you see more like this.', ref: 'I.E.2' },
+  { id: 's16', system: 'structural', section: 'Walls',                title: 'Deteriorating exterior paint',    desc: 'Peeling, damaged or deteriorating paint, stain and/or sealant at exterior trim.',                       severity: 'standard', costLow: 400, costHigh: 1500, time: '2 days',       pro: 'Painter',                   plain: 'Once paint goes, the wood underneath rots fast. Spot-prime and repaint affected areas.', ref: 'I.E.3' },
+  { id: 's17', system: 'structural', section: 'Walls',                title: 'Wood deterioration on exterior',  desc: 'Exterior wood materials show deterioration or damage. Repair to prevent moisture penetration and pest entry.', severity: 'high', costLow: 400, costHigh: 1200, time: '1 day',         pro: 'Carpenter',                 plain: 'Wood is rotting. If left alone it gets expensive — and termites love it. Replace damaged sections now.', ref: 'I.E.4' },
+  { id: 's18', system: 'structural', section: 'Walls',                title: 'Inadequate exterior sealants',    desc: 'Exterior sealants/caulking deteriorated or missing in areas. Prevents moisture intrusion.',             severity: 'diy',     costLow: 150, costHigh: 400,  time: '4 hrs',        pro: 'DIY or Handyman',           plain: 'Re-caulk gaps around penetrations and trim. A few tubes of exterior caulk go a long way.', ref: 'I.E.5' },
+  { id: 's19', system: 'structural', section: 'Walls',                title: 'Missing/inadequate weep holes',   desc: 'Weep holes not open, missing, or improperly spaced at lower brick/stone. Required for wall ventilation.', severity: 'safety', costLow: 300, costHigh: 800, time: 'Half day',     pro: 'Mason',                     plain: 'Weep holes let trapped moisture escape from behind the brick. Without them, water rots the framing you cannot see.', ref: 'I.E.6' },
+  { id: 's20', system: 'structural', section: 'Walls',                title: 'Improper caulking at wall penetration', desc: 'Improper caulking observed at a wall penetration. Recommend proper caulking.',                   severity: 'diy',     costLow: 50,  costHigh: 200,  time: '1 hr',         pro: 'DIY',                       plain: 'A pipe or vent goes through the wall and the seal around it is wrong. Quick fix with the right caulk.', ref: 'I.E.7' },
+  { id: 's21', system: 'structural', section: 'Walls',                title: 'Noticeable gaps in exterior walls', desc: 'Openings observed at exterior walls — may allow moisture, pest entry, or energy loss.',               severity: 'standard', costLow: 200, costHigh: 500, time: 'Half day',     pro: 'Handyman',                  plain: 'Gaps mean bugs, drafts, and water. Have these properly sealed.', ref: 'I.E.8' },
+  { id: 's22', system: 'structural', section: 'Ceilings & Floors',    title: 'Minor ceiling cracks',            desc: 'Minor cracks in interior ceiling — commonly associated with normal settlement.',                       severity: 'maintenance', costLow: 100, costHigh: 300, time: '2 hrs',     pro: 'Drywall Pro',               plain: 'Hairline cracks in ceilings come and go with seasons in Texas. Watch them; patch if they grow.', ref: 'I.F.1' },
+  { id: 's23', system: 'structural', section: 'Ceilings & Floors',    title: 'Sub-floor squeaks',               desc: 'Sub-floor squeaks heard in flooring. May indicate loose nails. Evaluate when floor covering is replaced.', severity: 'maintenance', costLow: 200, costHigh: 600, time: 'Varies',  pro: 'Flooring Contractor',       plain: 'Squeaks = loose subfloor nails. Easiest to fix when you replace the flooring on top.', ref: 'I.F.2' },
+  { id: 's24', system: 'structural', section: 'Ceilings & Floors',    title: 'Linear floor tile cracks',        desc: 'Linear cracks in floor tiles or grout — may indicate movement, settlement, or improper installation.', severity: 'standard', costLow: 400, costHigh: 1500, time: 'Varies',       pro: 'Tile Contractor',           plain: 'Cracks running in a line through tile usually means something moved underneath. Worth investigating before replacing.', ref: 'I.F.3' },
+  { id: 's25', system: 'structural', section: 'Doors',                title: 'Garage door does not self-latch', desc: 'Door from house to garage should be self-closing and self-latching. SAFETY HAZARD per TREC SOP.',       severity: 'safety',  costLow: 100, costHigh: 300,  time: '1 hr',         pro: 'Handyman',                  plain: 'This door separates your house from car exhaust and fire risk in the garage. Install self-closing hinges and check the latch.', ref: 'I.G.1' },
+  { id: 's26', system: 'structural', section: 'Doors',                title: 'Drifting interior doors',         desc: 'Doors observed drifting — indication of movement, settlement, or other defects.',                       severity: 'standard', costLow: 150, costHigh: 400, time: '2 hrs',        pro: 'Handyman',                  plain: 'Doors swinging open or shut on their own usually means the frame is out of plumb. Often adjustable.', ref: 'I.G.2' },
+  { id: 's27', system: 'structural', section: 'Doors',                title: 'Garage entry not self-closing',   desc: 'Garage entry door lacks self-closing hinges per current Texas SOP.',                                    severity: 'safety',  costLow: 100, costHigh: 300,  time: '1 hr',         pro: 'Handyman',                  plain: 'Self-closing hinges keep this door shut by default — protects the house from garage fumes.', ref: 'I.G.3' },
+  { id: 's28', system: 'structural', section: 'Doors',                title: 'Improper caulking at exterior door', desc: 'Improper caulking around exterior door frame.',                                                      severity: 'diy',     costLow: 30,  costHigh: 100,  time: '1 hr',         pro: 'DIY',                       plain: 'One tube of exterior caulk and a steady hand.', ref: 'I.G.4' },
+  { id: 's29', system: 'structural', section: 'Doors',                title: 'Rusted door lintel',              desc: 'Lintel above door frame observed rusted.',                                                              severity: 'standard', costLow: 200, costHigh: 500, time: 'Half day',     pro: 'Handyman / Painter',        plain: 'The metal beam above your door is rusting. Wire-brush, prime with rust-inhibiting primer, repaint.', ref: 'I.G.5' },
+  { id: 's30', system: 'structural', section: 'Windows',              title: 'Failed window seal',              desc: 'Thermal pane window seals failed — moisture/discoloration between glass panes.',                        severity: 'standard', costLow: 300, costHigh: 700,  time: '1 visit',       pro: 'Window Contractor',         plain: 'The double-pane window has lost its seal. The glass unit (IGU) needs replacement — frame stays.', ref: 'I.H.1', location: 'Primary bedroom' },
+  { id: 's31', system: 'structural', section: 'Windows',              title: 'Window caulking missing/deteriorated', desc: 'Sealant needed between window frames and exterior wall cladding.',                                severity: 'diy',     costLow: 100, costHigh: 300,  time: '3 hrs',        pro: 'DIY or Handyman',           plain: 'Re-caulk the perimeter of windows where the original has shrunk away.', ref: 'I.H.2' },
+  { id: 's32', system: 'structural', section: 'Windows',              title: 'Damaged window screen',           desc: 'Screen damaged — recommend repair or replacement.',                                                     severity: 'diy',     costLow: 30,  costHigh: 100,  time: '30 min',       pro: 'DIY',                       plain: 'Buy a screen kit at the hardware store, or any window shop will rescreen it for under $40.', ref: 'I.H.3' },
+  { id: 's33', system: 'structural', section: 'Windows',              title: 'Damaged/missing weather stripping', desc: 'Window weather stripping damaged — may allow moisture/air loss/insect entry.',                       severity: 'diy',     costLow: 50,  costHigh: 200,  time: '2 hrs',        pro: 'DIY',                       plain: 'Peel-and-stick weather stripping from any hardware store. 20 minutes per window.', ref: 'I.H.4' },
+  { id: 's34', system: 'structural', section: 'Windows',              title: 'Rusted window lintel',            desc: 'Window lintel showing signs of rusting.',                                                               severity: 'standard', costLow: 200, costHigh: 500, time: 'Half day',     pro: 'Painter',                   plain: 'Steel beam above window is rusting. Treat and repaint before it gets worse.', ref: 'I.H.5' },
+  { id: 's35', system: 'structural', section: 'Windows',              title: 'Exposed lintel',                  desc: 'Lintel exposed after window opening — may rust and crack exterior wall.',                              severity: 'standard', costLow: 300, costHigh: 800, time: 'Half day',     pro: 'Mason / Carpenter',         plain: 'A structural beam is left exposed where it should be covered. Will rust and stain the brick.', ref: 'I.H.6' },
+  { id: 's36', system: 'structural', section: 'Windows',              title: 'Misaligned window',               desc: 'Window observed misaligned — may impact operation or sealing.',                                         severity: 'standard', costLow: 150, costHigh: 400, time: '2 hrs',        pro: 'Window Contractor',         plain: 'Window does not sit straight in the frame. Often a quick adjustment, sometimes a hardware fix.', ref: 'I.H.7' },
+  { id: 's37', system: 'structural', section: 'Stairways',            title: 'Loose handrail balusters',        desc: 'Handrail balusters loose — potential safety hazard.',                                                   severity: 'standard', costLow: 100, costHigh: 300, time: '2 hrs',        pro: 'Handyman',                  plain: 'Wobbly spindles on the staircase. Tighten and re-secure.', ref: 'I.I.1' },
+  { id: 's38', system: 'structural', section: 'Stairways',            title: 'Loose or damaged handrail',       desc: 'Loose or damaged stairway hand railing/guard railing — should be repaired or replaced for safety.',     severity: 'safety',  costLow: 150, costHigh: 400,  time: '2 hrs',        pro: 'Handyman',                  plain: 'A handrail you can grab and trust is the difference between a stumble and a fall down stairs.', ref: 'I.I.2' },
+  { id: 's39', system: 'structural', section: 'Patios & Concrete',    title: 'Cracks in concrete',              desc: 'Cracks in poured concrete — sidewalks/driveways/garage floors/porches/patios.',                         severity: 'standard', costLow: 200, costHigh: 800, time: 'Varies',       pro: 'Concrete Pro',              plain: 'Concrete cracks. Seal them to keep water out and watch for any one that gets wider.', ref: 'I.K.1' },
+  { id: 's40', system: 'structural', section: 'Patios & Concrete',    title: 'Patio paint refresh needed',      desc: 'Wood components at patio show deteriorated paint finish.',                                              severity: 'standard', costLow: 300, costHigh: 1500, time: '2 days',       pro: 'Painter',                   plain: 'Outdoor wood needs paint or stain to survive Texas sun. Refresh before bare wood appears.', ref: 'I.K.2' },
+  { id: 'e1',  system: 'electrical', section: 'Service Panel',        title: 'Panel cover screws stripped',     desc: 'Several service panel cover screws did not properly engage enclosure mounting holes — stripped.',       severity: 'standard', costLow: 150, costHigh: 400,  time: '1 hr',         pro: 'Licensed Electrician',      plain: 'The screws holding the panel cover are spinning in stripped holes. An electrician installs proper fasteners so the cover stays secure.', ref: 'II.A.1' },
+  { id: 'e2',  system: 'electrical', section: 'Branch Circuits',      title: 'Missing receptacle cover plates', desc: 'One or more receptacles missing a cover plate — short and shock risk.',                                 severity: 'diy',     costLow: 5,   costHigh: 30,   time: '15 min',       pro: 'DIY',                       plain: 'Cover plates are $1 each at any hardware store. Two screws and you are done.', ref: 'II.B.1' },
+  { id: 'e3',  system: 'electrical', section: 'Branch Circuits',      title: 'No protective cover on attic light', desc: 'Attic ceiling light fixture missing protective cover — fire hazard near insulation/combustibles.',  severity: 'safety',  costLow: 30,  costHigh: 100,  time: '30 min',       pro: 'Electrician / Handyman',    plain: 'Bare bulb in the attic = fire risk if it touches insulation. Install a proper fixture cover.', ref: 'II.B.2' },
+  { id: 'e4',  system: 'electrical', section: 'Branch Circuits',      title: 'Loud ceiling fan',                desc: 'Ceiling fan operational but produces excessive noise — may indicate imbalance or wear.',                severity: 'diy',     costLow: 75,  costHigh: 200,  time: '1 hr',         pro: 'DIY or Handyman',           plain: 'Often just a balancing kit ($5) clipped to a blade. If it is the motor, cheaper to replace the fan.', ref: 'II.B.3', location: 'Living Room' },
+  { id: 'h1',  system: 'hvac',       section: 'Heating',              title: 'Air handler plenum not sealed',   desc: 'Heating equipment air handler plenum not properly sealed — may allow loss of conditioned air.',         severity: 'standard', costLow: 150, costHigh: 400, time: '2 hrs',        pro: 'HVAC Technician',           plain: 'Gaps where the duct meets the air handler leak the air you are paying to heat or cool. Mastic and tape seal it.', ref: 'III.A.1' },
+  { id: 'h2',  system: 'hvac',       section: 'Cooling',              title: 'AC line insulation missing/damaged', desc: 'HVAC refrigerant lines not properly insulated or insulation damaged at exterior equipment.',         severity: 'standard', costLow: 100, costHigh: 300, time: '1 hr',         pro: 'HVAC Technician',           plain: 'The black foam on the copper line outside is missing or torn. Replacing it improves efficiency and protects the line.', ref: 'III.B.1' },
+  { id: 'h3',  system: 'hvac',       section: 'Cooling',              title: 'AC pad eroding',                  desc: 'Concrete support pad shows soil erosion — may bring condenser out of level.',                           severity: 'standard', costLow: 100, costHigh: 300, time: '2 hrs',        pro: 'Landscaper / HVAC',         plain: 'Dirt under the AC pad is washing away. Build it back up with fill so the unit stays level.', ref: 'III.B.2' },
+  { id: 'h4',  system: 'hvac',       section: 'Cooling',              title: 'Missing wall-entry cover plate at AC lines', desc: 'Wall penetration for AC condenser refrigerant lines lacks proper cover plate or seal.',     severity: 'diy',     costLow: 30,  costHigh: 100,  time: '30 min',       pro: 'DIY',                       plain: 'Where the refrigerant lines enter the wall, install a $15 line-set cover and seal with sealant.', ref: 'III.B.3' },
+  { id: 'h5',  system: 'hvac',       section: 'Ductwork',             title: 'Ductwork in spray foam insulation', desc: 'Ductwork in direct contact with spray foam — may affect future inspection access and condensation control.', severity: 'maintenance', costLow: 0, costHigh: 300, time: 'Eval',        pro: 'HVAC Technician',           plain: 'Ducts buried in spray foam are hard to inspect later. Have an HVAC pro confirm proper installation; usually fine.', ref: 'III.C.1' },
+  { id: 'p1',  system: 'plumbing',   section: 'Supply',               title: 'Missing anti-siphon device on hose bibs', desc: 'Exterior water supply faucets missing anti-siphon device. SAFETY HAZARD — current code requires non-removable vacuum breakers.', severity: 'safety', costLow: 40, costHigh: 120, time: '30 min', pro: 'DIY or Plumber', plain: 'A $10 vacuum breaker that screws onto each hose bib. Stops dirty hose water from being sucked back into your drinking water if pressure drops.', ref: 'IV.A.1' },
+  { id: 'p2',  system: 'plumbing',   section: 'Supply',               title: 'Leaking hose bib',                desc: 'Exterior water supply hose bib leaking.',                                                               severity: 'standard', costLow: 100, costHigh: 300, time: '1 hr',         pro: 'Plumber',                   plain: 'Outdoor faucet drips. Often a washer; sometimes the whole bib needs replacing.', ref: 'IV.A.2' },
+  { id: 'p3',  system: 'plumbing',   section: 'Supply',               title: 'Wet area caulking/grouting needed', desc: 'Kitchen/sinks/bathtubs/showers/countertops in need of additional caulking or grouting.',              severity: 'diy',     costLow: 150, costHigh: 400,  time: '4 hrs',        pro: 'DIY or Handyman',           plain: 'Re-caulk and re-grout where you see gaps in wet areas. Prevents the most expensive repair in the house: a hidden leak.', ref: 'IV.A.3' },
+  { id: 'p4',  system: 'plumbing',   section: 'Supply',               title: 'Damaged sink basin',              desc: 'Sink basin damaged — may cause water leaks.',                                                           severity: 'standard', costLow: 200, costHigh: 600, time: 'Half day',     pro: 'Plumber',                   plain: 'Cracked sink. Replace the basin before the crack starts leaking into the cabinet.', ref: 'IV.A.4', location: 'Secondary bathroom' },
+  { id: 'p5',  system: 'plumbing',   section: 'Supply',               title: 'Failed shower diverter',          desc: 'Plumbing diverter damaged, malfunctioning, or leaking. Affects flow between tub spout and showerhead.', severity: 'standard', costLow: 150, costHigh: 400, time: '2 hrs',        pro: 'Plumber',                   plain: 'The little pull-tab that switches water from tub to shower is broken. Plumber swaps the cartridge.', ref: 'IV.A.5' },
+  { id: 'p6',  system: 'plumbing',   section: 'Supply',               title: 'Loose kitchen sink faucet',       desc: 'Kitchen sink faucet loose at mounting — can cause leaks and countertop damage.',                       severity: 'diy',     costLow: 50,  costHigh: 150,  time: '30 min',       pro: 'DIY',                       plain: 'Reach under the sink and tighten the mounting nut. Often that is it.', ref: 'IV.A.6' },
+  { id: 'p7',  system: 'plumbing',   section: 'Supply',               title: 'Sediment buildup at shower joints', desc: 'Sediment buildup at shower enclosure joints — may indicate prior minor leakage. No active leaks at inspection.', severity: 'standard', costLow: 150, costHigh: 400, time: '3 hrs',     pro: 'Tile / Caulking Pro',       plain: 'Old caulk lines have buildup that suggests past seepage. Re-caulk to prevent future water damage behind the tile.', ref: 'IV.A.7' },
+  { id: 'p8',  system: 'plumbing',   section: 'Drains',               title: 'Previous water damage under sink', desc: 'Signs of previous water damage beneath sink — possibility of past drain leak. No leak at inspection.', severity: 'maintenance', costLow: 0, costHigh: 300, time: 'Monitor',         pro: 'Self / Plumber',            plain: 'Old water stains under the sink, but nothing leaking now. Lay paper towels and check after a few days of use.', ref: 'IV.B.1' },
+  { id: 'p9',  system: 'plumbing',   section: 'Water Heater',         title: 'Water heater near end of useful life', desc: 'Water heating equipment is older. Average lifespan is 8–12 years. Continue using until replacement is necessary.', severity: 'high', costLow: 1500, costHigh: 2800, time: '1 day',       pro: 'Plumber',                   plain: 'Your 50-gallon gas water heater is on borrowed time. Budget for a replacement — they tend to fail by leaking, not warning you first.', ref: 'IV.C.1' },
+  { id: 'p10', system: 'plumbing',   section: 'Water Heater',         title: 'Water stains at water heater',    desc: 'Water staining at water heater area — may indicate prior leakage or condensation. No active leaks observed.', severity: 'maintenance', costLow: 0, costHigh: 200, time: 'Monitor',     pro: 'Self / Plumber',            plain: 'Old stains at the base of the water heater. Watch for any new moisture — that means it is starting to fail.', ref: 'IV.C.2' },
+  { id: 'p11', system: 'plumbing',   section: 'Gas',                  title: 'Rusted gas pipes',                desc: 'Rust observed at one or more gas pipes.',                                                               severity: 'standard', costLow: 150, costHigh: 400, time: '2 hrs',        pro: 'Licensed Plumber',          plain: 'Surface rust on black-iron gas piping. Wire-brush, prime, repaint to stop further corrosion.', ref: 'IV.E.1' },
+  { id: 'a1',  system: 'appliances', section: 'Dishwasher',           title: 'Missing anti-siphon loop on dishwasher', desc: 'No visible anti-siphon loop or backflow prevention at dishwasher drain line. SAFETY HAZARD per TREC SOP.', severity: 'safety', costLow: 100, costHigh: 250, time: '1 hr',           pro: 'Plumber',                   plain: 'Without a high-loop or air-gap, dirty sink water can siphon back into the dishwasher. Quick fix for a plumber.', ref: 'V.A.1' },
+  { id: 'a2',  system: 'appliances', section: 'Range',                title: 'Burner not lighting',             desc: 'One or more heating elements did not heat up when turned on.',                                          severity: 'standard', costLow: 150, costHigh: 400, time: '1 hr',         pro: 'Appliance Tech',            plain: 'A burner is dead. Often a cleaning or igniter swap; sometimes a control issue.', ref: 'V.D.1' },
+  { id: 'a3',  system: 'appliances', section: 'Range',                title: 'Burner does not reignite at low flame', desc: 'Stove flame went out at low setting and did not reignite — gas continues to flow without a lit flame. Safety concern.', severity: 'safety', costLow: 200, costHigh: 500, time: '1 hr', pro: 'Appliance Tech',            plain: 'When the flame blows out, gas keeps coming. Modern stoves should re-light automatically. Get this fixed.', ref: 'V.D.2' },
+  { id: 'a4',  system: 'appliances', section: 'Range',                title: 'No labeling on burner knobs',     desc: 'Stovetop burner control knobs not labeled to indicate which burner they operate.',                      severity: 'diy',     costLow: 20,  costHigh: 80,   time: '20 min',       pro: 'DIY',                       plain: 'Replacement knobs with proper labels are sold per stove model online. Or label them yourself.', ref: 'V.D.3' },
+  { id: 'a5',  system: 'appliances', section: 'Garage Door',          title: 'Loud garage door',                desc: 'Loud grinding or squealing when opening/closing — often dirt or lack of lubrication.',                  severity: 'diy',     costLow: 100, costHigh: 200,  time: '1 hr',         pro: 'DIY or Garage Pro',         plain: 'White lithium grease on rollers and hinges, vacuum the track. Solves it 80% of the time.', ref: 'V.G.1' },
+  { id: 'a6',  system: 'appliances', section: 'Garage Door',          title: 'Garage door does not auto-reverse', desc: 'Garage door did not reverse on manual pressure — safety hazard.',                                     severity: 'safety',  costLow: 150, costHigh: 400,  time: '1 hr',         pro: 'Garage Door Tech',          plain: 'The door should reverse if it hits anything (or anyone). Critical safety feature — get it fixed.', ref: 'V.G.2' },
+  { id: 'a7',  system: 'appliances', section: 'Garage Door',          title: 'Sensor at incorrect height',      desc: 'Automatic garage door opener electronic sensor installed at improper height — should be within 6 inches of garage floor.', severity: 'safety', costLow: 75, costHigh: 200, time: '30 min',     pro: 'Garage Door Tech',          plain: 'Safety sensors should sit 4–6 inches off the floor so they catch a child or pet. Reposition the brackets.', ref: 'V.G.3' },
+  { id: 'a8',  system: 'appliances', section: 'Garage Door',          title: 'Limited garage door opening height', desc: 'Garage door does not open to full height — limited headroom clearance when fully open.',              severity: 'standard', costLow: 200, costHigh: 500, time: '1 hr',         pro: 'Garage Door Tech',          plain: 'The door stops short. Could be a travel limit setting or the spring/cable assembly. A pro can usually adjust it.', ref: 'V.G.4' },
+  { id: 'a9',  system: 'appliances', section: 'Dryer Vent',           title: 'Dryer vent needs cleaning',       desc: 'Dryer vent and duct in need of cleaning — flammable lint should be removed for SAFETY.',                severity: 'safety',  costLow: 100, costHigh: 250,  time: '1 hr',         pro: 'Vent Cleaning Service',     plain: 'Lint buildup in dryer vents is the #1 cause of dryer fires. Schedule a vent cleaning every 1–2 years.', ref: 'V.H.1' },
+  { id: 'o1',  system: 'optional',   section: 'Sprinklers',           title: 'Broken sprinkler heads',          desc: 'Landscape irrigation system has missing/damaged sprinkler heads.',                                      severity: 'standard', costLow: 200, costHigh: 500, time: '2 hrs',        pro: 'Irrigation Tech',           plain: 'Several sprinkler heads need replacement. Heads are cheap (~$10 each); labor adds up if there are several.', ref: 'VI.A.1', location: 'Zones 1, 3, 4, 7' },
+  { id: 'o2',  system: 'optional',   section: 'Sprinklers',           title: 'Low water pressure on sprinkler', desc: 'Low water pressure observed. Check backflow device valve.',                                             severity: 'standard', costLow: 150, costHigh: 400, time: '1 hr',         pro: 'Irrigation Tech',           plain: 'One zone has weak pressure. First check the valve at the backflow preventer is fully open; otherwise have the zone diagnosed.', ref: 'VI.A.2', location: 'Zone 7' },
+  { id: 'o3',  system: 'optional',   section: 'Sprinklers',           title: 'Buried sprinkler heads',          desc: 'One or more sprinkler heads buried — cannot perform as intended.',                                      severity: 'diy',     costLow: 75,  costHigh: 200,  time: '1 hr',         pro: 'DIY or Irrigation',         plain: 'Heads sunk below grade do not water the yard. Dig them up, raise them with a riser.', ref: 'VI.A.3', location: 'Zones 3, 7' },
+  { id: 'o4',  system: 'optional',   section: 'Sprinklers',           title: 'Sprinkler aimed at exterior wall', desc: 'Sprinkler head aimed at exterior brick wall — may cause uneven wear.',                                 severity: 'diy',     costLow: 20,  costHigh: 80,   time: '15 min',       pro: 'DIY',                       plain: 'Twist the head to redirect spray off the brick. Free fix.', ref: 'VI.A.4', location: 'Zone 7' },
+  { id: 'o5',  system: 'optional',   section: 'Sprinklers',           title: 'Sprinkler line leaking',          desc: 'Water pooling observed — may be a leak at the head or in the pipe.',                                    severity: 'high',    costLow: 150, costHigh: 500,  time: 'Varies',       pro: 'Irrigation Tech',           plain: 'A leaking sprinkler line wastes water and can erode soil near the foundation. Get it located and repaired.', ref: 'VI.A.5', location: 'Zones 5, 7' },
+  { id: 'o6',  system: 'optional',   section: 'Fence',                title: 'Wood rot in fence',               desc: 'Sections of fence have wood rot — may compromise structural integrity over time.',                      severity: 'standard', costLow: 300, costHigh: 1500, time: 'Varies',       pro: 'Fence Contractor',          plain: 'Some boards are rotting. Replace affected sections before the whole panel needs to come down.', ref: 'VI.B.1' },
+  { id: 'o7',  system: 'optional',   section: 'Fence',                title: 'Minor lifting of fence sections', desc: 'Sections of wood fencing exhibit minor lifting or separation.',                                         severity: 'standard', costLow: 150, costHigh: 500, time: 'Half day',     pro: 'Fence Contractor',          plain: 'Boards working loose. Re-secure with proper fasteners before they fall.', ref: 'VI.B.2' },
+  { id: 'o8',  system: 'optional',   section: 'Fence',                title: 'Minor gaps at bottom of fence',   desc: 'Gaps at fence bottom — may allow small animals to pass.',                                               severity: 'diy',     costLow: 50,  costHigh: 200,  time: '2 hrs',        pro: 'DIY',                       plain: 'Fill with dirt or add a gravel/board barrier — depends on whether you have pets or critters to keep out.', ref: 'VI.B.3' },
+  { id: 'o9',  system: 'optional',   section: 'Fence',                title: 'Fence paint refresh needed',      desc: 'Fence paint or finish deteriorating — refresh recommended.',                                            severity: 'standard', costLow: 500, costHigh: 2500, time: '2-3 days',     pro: 'Painter',                   plain: 'Stain or paint protects fence wood from weather. Big visual improvement and extends fence life by years.', ref: 'VI.B.4' },
+  { id: 'o10', system: 'optional',   section: 'Fence',                title: 'Cracked wood at fence gate',      desc: 'Cracked or split wood at gate — may affect operation and durability.',                                  severity: 'diy',     costLow: 100, costHigh: 300,  time: '2 hrs',        pro: 'DIY or Handyman',           plain: 'Replace the cracked board(s) on the gate. A few boards from the lumberyard.', ref: 'VI.B.5' },
+  { id: 'o11', system: 'optional',   section: 'Fence',                title: 'Fence gate does not fully close', desc: 'Fence gate cannot fully close due to obstructions at bottom.',                                          severity: 'standard', costLow: 150, costHigh: 400, time: '2 hrs',        pro: 'Handyman',                  plain: 'Clear the obstruction and adjust hinges so the gate latches properly.', ref: 'VI.B.6' },
+  ],
+};
+
+const LOADING_STEPS = [
+  { pct: 8,   label: 'Authenticating TREC report format (REI 7-6)' },
+  { pct: 18,  label: 'Parsing inspection findings' },
+  { pct: 32,  label: 'Extracting deficiencies across systems' },
+  { pct: 45,  label: 'Cross-referencing TREC SOP §535.227–535.233' },
+  { pct: 58,  label: 'Categorizing findings by severity & urgency' },
+  { pct: 72,  label: 'Calculating DFW market repair estimates' },
+  { pct: 84,  label: 'Building prioritized client action plan' },
+  { pct: 94,  label: 'Compiling negotiation strategy' },
+  { pct: 100, label: 'Analysis complete' },
+];
+
+/* ===========================================================================
+   STATE
+   ======================================================================== */
+const state = {
+  phase: 'upload',          // 'upload' | 'loading' | 'disclaimer' | 'app'
+  showDisclaimer: false,    // re-openable disclaimer after acceptance
+  disclaimerScrolled: false,
+  uploadedFileName: '',     // filename shown after upload
+  activeSystem: null,
+  openId: null,
+  filters: [],
+  search: '',
+  sortBy: 'severity',
+};
+
+/* ===========================================================================
+   HELPERS
+   ======================================================================== */
+const fmt = n => '$' + Number(n).toLocaleString('en-US');
+const range = (lo, hi) => lo === hi ? fmt(lo) : `${fmt(lo)} – ${fmt(hi)}`;
+const totals = items => items.reduce(
+  (a, d) => ({ low: a.low + d.costLow, high: a.high + d.costHigh }),
+  { low: 0, high: 0 }
+);
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({
+  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
+}[c]));
+
+/* ===========================================================================
+   ICON HELPER (returns lucide tag with sizing)
+   ======================================================================== */
+const icon = (name, opts = {}) => {
+  const size = opts.size || 14;
+  const stroke = opts.stroke || 2;
+  const cls = opts.class || '';
+  const style = opts.style || '';
+  return `<i data-lucide="${name}" class="${cls}" style="width:${size}px;height:${size}px;stroke-width:${stroke};${style}"></i>`;
+};
+
+const aiPoweredBadge = (compact = false) => `
+  <span class="inline-flex items-center gap-1.5 rounded-sm border bg-ink font-mono font-semibold uppercase-tight"
+    style="border-color: rgba(212,162,58,0.4); color: #D4A23A; padding: ${compact ? '3px 7px' : '5px 10px'}; font-size: ${compact ? 9 : 10}px; letter-spacing: 0.1em;">
+    ${icon('sparkles', { size: compact ? 9 : 10, stroke: 2.5 })}
+    AI Powered Analysis
+  </span>
+`;
+
+const pill = (text, bg, color, iconName = null) => `
+  <span class="inline-flex items-center gap-1.5 rounded-full font-semibold uppercase-wide font-body"
+    style="background-color:${bg}; color:${color}; padding: 4px 10px; font-size: 10px;">
+    ${iconName ? icon(iconName, { size: 11, stroke: 2.5 }) : ''}
+    ${escapeHtml(text)}
+  </span>
+`;
+
+const severityBadge = sev => {
+  const s = SEVERITY[sev];
+  return pill(s.label, s.bg, s.text, s.icon);
+};
+
+/* ===========================================================================
+   RENDER: LOADING SCREEN STEPS
+   ======================================================================== */
+function renderLoadingSteps(currentStep, progress) {
+  const ul = document.getElementById('loading-steps');
+  if (!ul) return;
+  // Show steps up to currentStep
+  let html = '';
+  for (let i = 0; i <= currentStep && i < LOADING_STEPS.length; i++) {
+    const s = LOADING_STEPS[i];
+    const isCurrent = i === currentStep && progress < 100;
+    const isDone = !isCurrent;
+    html += `
+      <li class="flex items-start gap-3 fade-in">
+        <div class="mt-0.5 w-4 flex-shrink-0">
+          ${isDone
+            ? `<i data-lucide="check-circle-2" style="width:13px;height:13px;stroke-width:2.5;color:#D4A23A;"></i>`
+            : `<i data-lucide="loader-2" class="spinit" style="width:13px;height:13px;stroke-width:2.5;color:rgba(252,250,244,0.7);"></i>`
+          }
+        </div>
+        <div class="flex-1" style="color:${isDone ? 'rgba(252,250,244,0.4)' : '#FCFAF4'};">
+          <span class="opacity-60 mr-2">${String(i+1).padStart(2, '0')}</span>${escapeHtml(s.label)}
+        </div>
+      </li>
+    `;
+  }
+  ul.innerHTML = html;
+  lucide.createIcons();
+}
+
+function startLoadingAnimation(onComplete) {
+  const start = performance.now();
+  const totalMs = 5800;
+  let lastStep = -1;
+
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(100, (elapsed / totalMs) * 100);
+
+    document.getElementById('loading-bar').style.width = progress + '%';
+    document.getElementById('loading-pct').textContent = Math.round(progress) + '%';
+
+    let stepIdx = LOADING_STEPS.findIndex(s => s.pct >= progress);
+    if (stepIdx === -1) stepIdx = LOADING_STEPS.length - 1;
+
+    if (stepIdx !== lastStep) {
+      renderLoadingSteps(stepIdx, progress);
+      lastStep = stepIdx;
+    }
+
+    if (elapsed < totalMs) {
+      requestAnimationFrame(tick);
+    } else {
+      document.getElementById('loading-bar').style.width = '100%';
+      document.getElementById('loading-pct').textContent = '100%';
+      renderLoadingSteps(LOADING_STEPS.length - 1, 100);
+      setTimeout(onComplete, 700);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ===========================================================================
+   RENDER: HEADER
+   ======================================================================== */
+function renderHeader() {
+  const nav = [
+    { id: 'dashboard', label: 'Dashboard',           iconName: 'layout-dashboard' },
+    { id: 'analyzer',  label: 'Inspection Analyzer', iconName: 'clipboard-list',  active: true },
+    { id: 'estimates', label: 'Repair Estimates',    iconName: 'calculator',      soon: true },
+    { id: 'pros',      label: 'Pro Network',         iconName: 'hammer',          soon: true },
+    { id: 'docs',      label: 'Documents',           iconName: 'file-text',       soon: true },
+  ];
+  return `
+    <header class="sticky top-0 z-30 border-b backdrop-blur-md" style="background-color: rgba(247,242,231,0.92); border-color: rgba(26,22,18,0.08);">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10">
+        <div class="flex items-center justify-between gap-3 lg:gap-8" style="height:60px;">
+          <!-- Brand: full text on md+, abbreviated on mobile -->
+          <div class="flex items-center gap-2.5 lg:gap-3 min-w-0 flex-1">
+            <img src="${LOGO_DATA_URL}" alt="BPI" width="38" height="38" class="block select-none flex-shrink-0 lg:w-11 lg:h-11" draggable="false" />
+            <div class="flex flex-col leading-none min-w-0">
+              <span class="text-[13px] lg:text-[15px] fr-tag tracking-tight truncate">
+                <span class="lg:hidden">BPI Home Portal</span>
+                <span class="hidden lg:inline">Buffalo Property Inspections</span>
+              </span>
+              <span class="text-[9px] lg:text-[10px] uppercase-tight mt-1 font-body font-semibold text-goldDeep truncate">
+                <span class="lg:hidden">Personalized Profile</span>
+                <span class="hidden lg:inline">Home Management Portal</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Nav (desktop only) -->
+          <nav class="hidden lg:flex items-center gap-1">
+            ${nav.map(item => `
+              <button
+                ${item.soon ? 'disabled' : ''}
+                class="group flex items-center gap-2 px-3 py-2 rounded-md text-[12px] font-medium transition-all font-body
+                  ${item.soon ? 'opacity-40 cursor-not-allowed' : 'hover:bg-black/5'}"
+                style="color: ${item.active ? '#1A1612' : '#3D352C'}; background-color: ${item.active ? 'rgba(212,162,58,0.18)' : 'transparent'};">
+                ${icon(item.iconName, { size: 14 })}
+                <span>${item.label}</span>
+                ${item.soon ? '<span class="text-[8px] uppercase-tight px-1.5 py-0.5 rounded bg-creamDeep text-inkMute">Soon</span>' : ''}
+              </button>
+            `).join('')}
+          </nav>
+
+          <!-- Right side actions -->
+          <div class="flex items-center gap-1 lg:gap-3 flex-shrink-0">
+            <!-- New Report: icon-only on mobile, with text on md+ -->
+            <button data-action="reset-app" class="flex items-center gap-1.5 text-[10px] uppercase-tight font-semibold rounded transition hover:bg-black/5 text-inkMute font-body p-2 md:px-2.5 md:py-1.5" title="Upload a different report" aria-label="New report">
+              ${icon('upload', { size: 14, class: 'md:!w-[11px] md:!h-[11px]' })}
+              <span class="hidden md:inline">New Report</span>
+            </button>
+            <button data-action="show-disclaimer" class="hidden md:flex items-center gap-1.5 text-[10px] uppercase-tight font-semibold px-2.5 py-1.5 rounded transition hover:bg-black/5 text-inkMute font-body" title="View disclaimer">
+              ${icon('file-warning', { size: 11 })}
+              <span>Disclaimer</span>
+            </button>
+            <!-- Mobile-only menu trigger for disclaimer/welcome -->
+            <button data-action="show-disclaimer" class="md:hidden p-2 rounded transition hover:bg-black/5 text-inkMute" title="Disclaimer" aria-label="Disclaimer">
+              ${icon('file-warning', { size: 14 })}
+            </button>
+            <button class="hidden md:flex p-2 rounded-md hover:bg-black/5 transition text-inkSoft" aria-label="Notifications">
+              ${icon('bell', { size: 16 })}
+            </button>
+            ${data.client.name ? `
+            <div class="hidden lg:flex items-center gap-2 pl-3 border-l" style="border-color: rgba(26,22,18,0.08);">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold bg-ink text-gold fr-tag">${escapeHtml(data.client.initials || '—')}</div>
+              <div class="flex flex-col leading-tight">
+                <span class="text-[11px] font-semibold font-body">${escapeHtml(data.client.name)}</span>
+                <span class="text-[9px] uppercase-tight font-body text-inkMute">Client</span>
+              </div>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+    </header>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: PROPERTY HERO
+   ======================================================================== */
+function renderHero() {
+  return `
+    <section class="relative overflow-hidden bg-cream">
+      <div class="absolute top-0 left-0 right-0 h-px" style="background-color: rgba(212,162,58,0.5);"></div>
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10 pt-8 lg:pt-12 pb-8 lg:pb-10">
+
+        <!-- Tool labeling banner -->
+        <div class="flex flex-wrap items-center gap-2 lg:gap-3 mb-6 lg:mb-8 pb-4 lg:pb-5 border-b" style="border-color: rgba(26,22,18,0.08);">
+          ${aiPoweredBadge()}
+          <span class="text-[11px] flex items-center gap-1.5 text-inkMute font-body">
+            ${icon('cpu', { size: 11 })}
+            <span class="hidden sm:inline">Inspection Report Analyzer · v1.0</span>
+            <span class="sm:hidden">Analyzer v1.0</span>
+          </span>
+          <div class="hidden md:block flex-1"></div>
+          <span class="text-[10px] flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body font-semibold uppercase-tight"
+            style="color:#A87C20; background-color: rgba(242,221,160,0.55);">
+            ${icon('shield-check', { size: 11, stroke: 2.5 })}
+            <span class="hidden sm:inline">TREC SOP §535.227–535.233</span>
+            <span class="sm:hidden">TREC Compliant</span>
+          </span>
+        </div>
+
+        <div class="grid grid-cols-12 gap-4 lg:gap-8 items-end">
+          <div class="col-span-12 lg:col-span-8">
+            <div class="flex items-center gap-2 lg:gap-3 mb-3 lg:mb-4">
+              <span class="text-[9px] lg:text-[10px] uppercase-x font-semibold text-goldDeep font-body whitespace-nowrap">Report №</span>
+              <span class="font-mono text-[10px] text-inkMute truncate">${escapeHtml(data.inspection.reportNumber || '— — —')}</span>
+              <div class="flex-1 h-px" style="background-color: rgba(26,22,18,0.13);"></div>
+              ${pill('AI Analyzed', '#1A1612', '#D4A23A')}
+            </div>
+
+            <h1 class="text-[32px] sm:text-[40px] lg:text-[68px] leading-[0.98] lg:leading-[0.95] tracking-tight mb-1 fr-display text-ink break-words">${escapeHtml(data.property.address || 'No address loaded')}</h1>
+            <p class="text-[15px] lg:text-[18px] mt-1 mb-5 lg:mb-6 fr-italic text-inkSoft">${escapeHtml([data.property.city, data.property.state, data.property.zip].filter(Boolean).join(', ').replace(/, ([^,]+)$/, ' $1') || 'Drop a customer data file to populate')}</p>
+
+            <div class="grid grid-cols-2 lg:flex lg:flex-wrap gap-x-4 lg:gap-x-8 gap-y-3 text-[12px] font-body">
+              <div>
+                <div class="text-[9px] uppercase-tight mb-1 text-inkMute">Inspected</div>
+                <div class="flex items-center gap-1.5 font-semibold text-ink flex-wrap">
+                  ${icon('calendar', { size: 12 })}
+                  <span>${escapeHtml(data.inspection.date || '—')}</span>
+                  ${data.inspection.time && data.inspection.time !== '—' ? `<span class="text-inkMute">· ${escapeHtml(data.inspection.time)}</span>` : ''}
+                </div>
+              </div>
+              <div>
+                <div class="text-[9px] uppercase-tight mb-1 text-inkMute">Inspector</div>
+                <div class="flex items-center gap-1.5 font-semibold text-ink flex-wrap">
+                  ${icon('user', { size: 12 })}
+                  <span class="truncate">${escapeHtml(data.inspection.inspector || '—')}</span>
+                  ${data.inspection.trecLicense ? `<span class="font-mono text-[9px] lg:text-[10px] px-1.5 py-0.5 rounded text-goldDeep bg-goldSoft whitespace-nowrap">TREC #${escapeHtml(data.inspection.trecLicense)}</span>` : ''}
+                </div>
+              </div>
+              <div>
+                <div class="text-[9px] uppercase-tight mb-1 text-inkMute">Property</div>
+                <div class="flex items-center gap-1.5 font-semibold text-ink">
+                  ${icon('home', { size: 12 })}
+                  <span class="truncate">${escapeHtml(data.property.type || '—')}</span>
+                </div>
+              </div>
+              <div>
+                <div class="text-[9px] uppercase-tight mb-1 text-inkMute">Source</div>
+                <div class="flex items-center gap-1.5 font-semibold text-ink">
+                  ${icon('file-text', { size: 12 })}
+                  <span>TREC REI 7-6</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Findings summary card (compact on mobile, larger on desktop) -->
+          <div class="col-span-12 lg:col-span-4 mt-2 lg:mt-0">
+            <div class="relative rounded-sm overflow-hidden flex items-end p-4 lg:p-5"
+              style="background: linear-gradient(135deg, #1A1612 0%, #2A241D 100%); min-height: 120px; box-shadow: 0 20px 40px -20px rgba(26,22,18,0.25), inset 0 1px 0 rgba(212,162,58,0.18);">
+              <svg class="absolute inset-0 opacity-[0.08]" width="100%" height="100%">
+                <defs>
+                  <pattern id="grid2" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#D4A23A" stroke-width="0.5"></path>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid2)"></rect>
+              </svg>
+              <svg viewBox="0 0 200 140" class="absolute top-3 right-3 w-20 lg:top-4 lg:right-4 lg:w-32 opacity-90">
+                <path d="M20 80 L100 30 L180 80 L180 120 L20 120 Z" fill="#D4A23A" opacity="0.15"></path>
+                <path d="M20 80 L100 30 L180 80" stroke="#D4A23A" stroke-width="1.5" fill="none"></path>
+                <rect x="40" y="80" width="120" height="40" stroke="#D4A23A" stroke-width="1.5" fill="none"></rect>
+                <rect x="55" y="92" width="20" height="28" stroke="#D4A23A" stroke-width="1" fill="none"></rect>
+                <rect x="90" y="92" width="50" height="20" stroke="#D4A23A" stroke-width="1" fill="none"></rect>
+                <line x1="115" y1="92" x2="115" y2="112" stroke="#D4A23A" stroke-width="0.8"></line>
+                <line x1="90" y1="102" x2="140" y2="102" stroke="#D4A23A" stroke-width="0.8"></line>
+              </svg>
+              <div class="relative">
+                <div class="text-[9px] uppercase-x mb-1 font-body" style="color: rgba(212,162,58,0.7);">Findings</div>
+                <div class="flex items-baseline gap-3">
+                  <span class="text-[40px] lg:text-[56px] leading-none fr-num text-gold">${data.deficiencies.length}</span>
+                  <span class="text-[10px] lg:text-[11px] uppercase-tight font-body" style="color: rgba(212,162,58,0.7);">items<br>flagged</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: STATS BLOCK
+   ======================================================================== */
+function renderStats() {
+  const safety = data.deficiencies.filter(d => d.severity === 'safety');
+  const high = data.deficiencies.filter(d => d.severity === 'high');
+  const total = totals(data.deficiencies);
+  const sT = totals(safety);
+  const hT = totals(high);
+
+  const cards = [
+    { label: 'Total est. repair range', value: range(total.low, total.high), sub: `Across ${data.deficiencies.length} items · estimate only`, accent: '#1A1612', big: true },
+    { label: 'Safety items', value: safety.length, sub: `${range(sT.low, sT.high)} to address`, accent: '#8B2A1F', iconName: 'shield-alert' },
+    { label: 'Negotiate w/ seller', value: high.length, sub: `${range(hT.low, hT.high)} potential`, accent: '#C97324', iconName: 'trending-up' },
+    { label: 'Quick DIY wins', value: data.deficiencies.filter(d => d.severity === 'diy').length, sub: 'Weekend projects', accent: '#5A6B4A', iconName: 'hammer' },
+  ];
+
+  return `
+    <section class="bg-ivory">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10 py-6 lg:py-8 grid grid-cols-2 lg:grid-cols-4 gap-px" style="background-color: rgba(26,22,18,0.06);">
+        ${cards.map(c => `
+          <div class="p-4 lg:p-6 bg-ivory">
+            <div class="flex items-center justify-between mb-2 lg:mb-3 gap-2">
+              <span class="text-[9px] uppercase-tight font-semibold text-inkMute font-body leading-tight">${c.label}</span>
+              ${c.iconName ? icon(c.iconName, { size: 14, stroke: 2.5, style: `color:${c.accent};flex-shrink:0;` }) : ''}
+            </div>
+            <div class="${c.big ? 'text-[24px] sm:text-[30px] lg:text-[42px]' : 'text-[32px] lg:text-[44px]'} leading-none mb-1.5 lg:mb-2 fr-num break-words"
+              style="color:${c.accent}; font-weight:${c.big ? 400 : 300};">${c.value}</div>
+            <div class="text-[10px] lg:text-[11px] text-inkSoft font-body leading-tight">${c.sub}</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: ESTIMATES DISCLAIMER STRIP
+   ======================================================================== */
+function renderEstimatesStrip() {
+  return `
+    <div class="border-y" style="background-color: rgba(201,115,36,0.07); border-color: rgba(201,115,36,0.25);">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10 py-3 flex flex-wrap items-center gap-2 lg:gap-3 text-[11px] lg:text-[11.5px] font-body">
+        ${icon('alert-circle', { size: 14, style: 'color:#C97324;flex-shrink:0;' })}
+        <p class="text-inkSoft flex-1 leading-relaxed" style="min-width:200px;">
+          <strong class="text-ink">Estimates only.</strong> All cost figures are AI-generated based on typical DFW pricing — they are <em>not</em> firm quotes. Only a licensed contractor can provide a binding quote.
+        </p>
+        <button data-action="show-disclaimer" class="text-[10px] uppercase-tight font-semibold underline-offset-2 hover:underline font-body whitespace-nowrap" style="color:#C97324;">
+          Read full →
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: ACTION PLAN
+   ======================================================================== */
+function renderActionPlan() {
+  const buckets = [
+    { key:'safety',   title:'Address before move-in', subtitle:'Safety hazards & code concerns',  items:data.deficiencies.filter(d=>d.severity==='safety'),   color:'#8B2A1F', soft:'#E8C9C2', iconName:'shield-alert', action:'Get repair quotes & negotiate with seller' },
+    { key:'high',     title:'Negotiate as credits',   subtitle:'Significant repairs worth pursuing', items:data.deficiencies.filter(d=>d.severity==='high'),     color:'#C97324', soft:'#F0D5B0', iconName:'trending-up',  action:'Request seller credits at closing' },
+    { key:'standard', title:'Plan for year one',      subtitle:'Routine repairs to schedule',     items:data.deficiencies.filter(d=>d.severity==='standard'), color:'#D4A23A', soft:'#F2DDA0', iconName:'calendar',      action:'Tackle as you settle in' },
+    { key:'diy',      title:'Weekend DIY wins',       subtitle:'Small fixes you can handle',      items:data.deficiencies.filter(d=>d.severity==='diy'),      color:'#5A6B4A', soft:'#D4DBC8', iconName:'hammer',        action:'Knock these out yourself' },
+  ];
+
+  return `
+    <section class="py-10 lg:py-14 bg-cream">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10">
+        <div class="flex items-end justify-between mb-6 lg:mb-8 flex-wrap gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="text-[10px] uppercase-x font-semibold mb-2 text-goldDeep font-body">Section 01 · AI-suggested action plan</div>
+            <h2 class="text-[28px] sm:text-[32px] lg:text-[44px] leading-tight fr-headline text-ink">Your action plan</h2>
+            <p class="text-[13px] lg:text-[14px] mt-2 max-w-2xl text-inkSoft font-body">
+              We've sorted every finding into four buckets so you know exactly what matters most — and what can wait.
+              <span class="text-inkMute hidden sm:inline">Categorizations are AI-generated suggestions; consult professionals before acting.</span>
+            </p>
+          </div>
+          <div class="text-left lg:text-right w-full lg:w-auto">
+            <div class="text-[10px] uppercase-tight text-inkMute font-body">Bottom line (est.)</div>
+            <div class="text-[22px] lg:text-[28px] mt-1 fr-headline text-ink">${range(totals(data.deficiencies).low, totals(data.deficiencies).high)}</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+          ${buckets.map(b => {
+            const t = totals(b.items);
+            return `
+              <div class="relative rounded-sm p-5 lg:p-6 flex flex-col hover-lift bg-ivory" style="border:1px solid rgba(26,22,18,0.08); box-shadow: 0 1px 0 rgba(26,22,18,0.02);">
+                <div class="absolute top-0 left-0 right-0 h-1 rounded-t-sm" style="background-color:${b.color};"></div>
+                <div class="flex items-start justify-between mb-3 lg:mb-4 mt-1">
+                  <div class="w-9 h-9 lg:w-10 lg:h-10 rounded flex items-center justify-center" style="background-color:${b.soft}; color:${b.color};">
+                    ${icon(b.iconName, { size: 16 })}
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[32px] lg:text-[36px] leading-none fr-num" style="color:${b.color};">${b.items.length}</div>
+                    <div class="text-[9px] uppercase-tight text-inkMute font-body">items</div>
+                  </div>
+                </div>
+                <h3 class="text-[16px] lg:text-[18px] mb-1 fr-headline">${b.title}</h3>
+                <p class="text-[11px] mb-3 lg:mb-4 text-inkMute font-body">${b.subtitle}</p>
+                <div class="mt-auto pt-3 lg:pt-4 border-t" style="border-color: rgba(26,22,18,0.06);">
+                  <div class="text-[9px] uppercase-tight mb-1 text-inkMute font-body">Estimated</div>
+                  <div class="text-[15px] lg:text-[16px] font-semibold mb-2 lg:mb-3 text-ink font-body">${range(t.low, t.high)}</div>
+                  <div class="text-[11px] leading-snug flex items-start gap-1.5 text-inkSoft font-body">
+                    ${icon('arrow-right', { size: 11, style: `color:${b.color};margin-top:2px;flex-shrink:0;` })}
+                    <span>${b.action}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: SYSTEM BREAKDOWN
+   ======================================================================== */
+function renderSystemBreakdown() {
+  const breakdown = Object.entries(SYSTEMS).map(([key, sys]) => {
+    const items = data.deficiencies.filter(d => d.system === key);
+    const t = totals(items);
+    return { key, sys, count: items.length, low: t.low, high: t.high };
+  }).sort((a, b) => b.high - a.high);
+
+  const maxHigh = Math.max(...breakdown.map(b => b.high)) || 1;
+
+  return `
+    <section class="py-10 lg:py-12 bg-ivory">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10">
+        <div class="flex items-end justify-between mb-6 lg:mb-8 gap-3">
+          <div>
+            <div class="text-[10px] uppercase-x font-semibold mb-2 text-goldDeep font-body">Section 02</div>
+            <h2 class="text-[28px] sm:text-[32px] lg:text-[44px] leading-tight fr-headline text-ink">By system</h2>
+          </div>
+          <div class="text-[10px] lg:text-[11px] text-inkMute font-body">Tap to filter ↓</div>
+        </div>
+
+        <div id="system-bars" class="space-y-2">
+          ${breakdown.map(b => {
+            const widthPct = (b.high / maxHigh) * 100;
+            const isActive = state.activeSystem === b.key;
+            return `
+              <button data-action="toggle-system" data-system="${b.key}"
+                class="system-bar w-full rounded-sm transition-all text-left hover:bg-black/[0.02]"
+                style="background-color:${isActive ? 'rgba(212,162,58,0.12)' : 'transparent'}; border: 1px solid ${isActive ? '#D4A23A' : 'rgba(26,22,18,0.06)'};">
+                <!-- Mobile layout: label+count top row, bar middle, cost bottom -->
+                <div class="lg:hidden p-3 space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      ${icon(b.sys.icon, { size: 14 })}
+                      <span class="text-[13px] font-semibold text-ink font-body truncate">${b.sys.label}</span>
+                      <span class="text-[10px] tabular-nums text-inkMute font-mono whitespace-nowrap">${b.count} ${b.count === 1 ? 'item' : 'items'}</span>
+                    </div>
+                    <span class="text-[12px] font-semibold tabular-nums text-ink font-body whitespace-nowrap">${range(b.low, b.high)}</span>
+                  </div>
+                  <div class="relative h-1.5 rounded-full overflow-hidden" style="background-color: rgba(26,22,18,0.05);">
+                    <div class="absolute inset-y-0 left-0 rounded-full transition-all" style="width:${widthPct}%; background-color:${isActive ? '#D4A23A' : '#1A1612'}; transition-duration: 700ms;"></div>
+                  </div>
+                </div>
+                <!-- Desktop layout: 12-column grid -->
+                <div class="hidden lg:grid grid-cols-12 items-center gap-4 px-4 py-3">
+                  <div class="col-span-3 flex items-center gap-2.5">
+                    ${icon(b.sys.icon, { size: 15 })}
+                    <span class="text-[13px] font-semibold text-ink font-body">${b.sys.label}</span>
+                  </div>
+                  <div class="col-span-1 text-[11px] tabular-nums text-inkMute font-mono">${b.count} ${b.count === 1 ? 'item' : 'items'}</div>
+                  <div class="col-span-5">
+                    <div class="relative h-1.5 rounded-full overflow-hidden" style="background-color: rgba(26,22,18,0.05);">
+                      <div class="absolute inset-y-0 left-0 rounded-full transition-all" style="width:${widthPct}%; background-color:${isActive ? '#D4A23A' : '#1A1612'}; transition-duration: 700ms;"></div>
+                    </div>
+                  </div>
+                  <div class="col-span-3 text-right text-[12px] font-semibold tabular-nums text-ink font-body">${range(b.low, b.high)}</div>
+                </div>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: DEFICIENCY LIST (filterable section)
+   ======================================================================== */
+function getFilteredDeficiencies() {
+  let list = data.deficiencies.slice();
+  if (state.filters.length) list = list.filter(d => state.filters.includes(d.severity));
+  if (state.activeSystem) list = list.filter(d => d.system === state.activeSystem);
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    list = list.filter(d =>
+      d.title.toLowerCase().includes(q) ||
+      d.desc.toLowerCase().includes(q) ||
+      d.section.toLowerCase().includes(q) ||
+      d.plain.toLowerCase().includes(q)
+    );
+  }
+  if (state.sortBy === 'severity')      list.sort((a, b) => SEVERITY[b.severity].weight - SEVERITY[a.severity].weight);
+  else if (state.sortBy === 'costHigh') list.sort((a, b) => b.costHigh - a.costHigh);
+  else if (state.sortBy === 'costLow')  list.sort((a, b) => a.costLow - b.costLow);
+  else if (state.sortBy === 'system')   list.sort((a, b) => a.system.localeCompare(b.system));
+  return list;
+}
+
+function renderFilterBar() {
+  const sevKeys = Object.keys(SEVERITY);
+  return `
+    <div id="filter-bar" class="sticky z-20 backdrop-blur-md border-b py-3 lg:py-4" style="top:60px; background-color: rgba(252,250,244,0.96); border-color: rgba(26,22,18,0.06);">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10 space-y-2.5 lg:space-y-0">
+
+        <!-- Row 1: Search (full width on mobile, share row on desktop) -->
+        <div class="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-2.5 lg:gap-3">
+          <!-- Search -->
+          <div class="relative w-full lg:flex-1" style="lg-min-width:200px; max-width:24rem;">
+            ${icon('search', { size: 13, style: 'position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#7A6E5F;pointer-events:none;' })}
+            <input id="search-input" type="text" placeholder="Search findings…" value="${escapeHtml(state.search)}"
+              class="w-full pl-9 pr-3 py-2.5 lg:py-2 text-[13px] lg:text-[12px] rounded-sm focus:outline-none focus:ring-1 bg-ivory text-ink font-body"
+              style="border:1px solid rgba(26,22,18,0.1);" />
+          </div>
+
+          <!-- Severity filter pills — horizontal scroll on mobile if needed -->
+          <div class="flex items-center gap-1.5 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap" style="scrollbar-width:none;">
+            <span class="text-[10px] uppercase-tight mr-1 text-inkMute font-body whitespace-nowrap flex-shrink-0">Filter:</span>
+            ${sevKeys.map(k => {
+              const s = SEVERITY[k];
+              const active = state.filters.includes(k);
+              return `
+                <button data-action="toggle-filter" data-severity="${k}"
+                  class="filter-pill text-[10px] uppercase-tight font-semibold px-2.5 py-1.5 lg:py-1 rounded-full flex items-center gap-1 transition-all font-body whitespace-nowrap flex-shrink-0"
+                  style="background-color:${active ? s.bg : 'transparent'}; color:${active ? s.text : '#3D352C'}; border:1px solid ${active ? s.bg : 'rgba(26,22,18,0.13)'};">
+                  ${active ? icon('check-circle-2', { size: 9, stroke: 3 }) : ''}
+                  ${s.label}
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="hidden lg:block flex-1"></div>
+
+          <!-- Count + sort -->
+          <div class="flex items-center gap-2 justify-between lg:justify-end">
+            ${(state.activeSystem || state.filters.length > 0 || state.search) ? `
+              <button data-action="clear-filters" class="text-[10px] uppercase-tight font-semibold px-2 py-1 rounded flex items-center gap-1 hover:bg-black/5 text-inkSoft font-body">
+                ${icon('x', { size: 10 })} Clear
+              </button>` : '<span></span>'
+            }
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] uppercase-tight text-inkMute font-body">
+                <span id="result-count" class="text-[14px] font-semibold mr-1 text-ink fr-headline">0</span>showing
+              </span>
+              <div class="flex items-center gap-1 ml-1 pl-2 lg:pl-3 border-l" style="border-color: rgba(26,22,18,0.1);">
+                <span class="text-[10px] uppercase-tight text-inkMute font-body hidden sm:inline">Sort:</span>
+                <select id="sort-select" class="text-[11px] font-semibold bg-transparent focus:outline-none text-ink font-body">
+                  <option value="severity"${state.sortBy === 'severity' ? ' selected' : ''}>Priority</option>
+                  <option value="costHigh"${state.sortBy === 'costHigh' ? ' selected' : ''}>Cost (high)</option>
+                  <option value="costLow"${state.sortBy === 'costLow' ? ' selected' : ''}>Cost (low)</option>
+                  <option value="system"${state.sortBy === 'system' ? ' selected' : ''}>System</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${state.activeSystem ? `
+          <div class="flex items-center gap-2">
+            ${pill('System: ' + SYSTEMS[state.activeSystem].label, '#D4A23A', '#1A1612')}
+            <button data-action="clear-system" class="text-[10px] text-inkMute font-body">clear</button>
+          </div>` : ''
+        }
+      </div>
+    </div>
+  `;
+}
+
+function renderDeficiencyDetail(d) {
+  const sys = SYSTEMS[d.system];
+  return `
+    <div class="px-4 lg:px-6 py-5 lg:py-6 grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6 fade-in" style="background-color:#F7F2E7; border-top:1px solid rgba(26,22,18,0.06);">
+      <div class="lg:col-span-2">
+        <div class="text-[9px] uppercase-tight mb-2 text-inkMute font-body">AI plain-English summary</div>
+        <p class="text-[14px] lg:text-[15px] leading-relaxed mb-5 text-ink font-body">${escapeHtml(d.plain)}</p>
+
+        <div class="text-[9px] uppercase-tight mb-2 text-inkMute font-body">Inspector's official note · TREC report</div>
+        <p class="text-[12px] leading-relaxed mb-5 text-inkSoft fr-italic">"${escapeHtml(d.desc)}"</p>
+
+        <div class="flex flex-wrap gap-2">
+          ${pill(d.ref, '#EFE8D6', '#3D352C')}
+          ${pill(`${sys.label} → ${d.section}`, '#EFE8D6', '#3D352C')}
+          ${d.location ? pill(d.location, '#EFE8D6', '#3D352C') : ''}
+        </div>
+      </div>
+
+      <div class="lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4 lg:flex lg:flex-col">
+        <div class="rounded-sm p-3 lg:p-4 bg-ivory" style="border:1px solid rgba(26,22,18,0.06);">
+          <div class="flex items-center justify-between mb-2 gap-1 flex-wrap">
+            <span class="text-[9px] uppercase-tight text-inkMute font-body">Estimated cost</span>
+            <span class="text-[8px] uppercase-tight px-1.5 py-0.5 rounded font-body font-semibold whitespace-nowrap" style="color:#C97324; background-color: rgba(201,115,36,0.1);">EST</span>
+          </div>
+          <div class="text-[22px] lg:text-[28px] leading-none mb-1 fr-headline text-ink">${range(d.costLow, d.costHigh)}</div>
+          <div class="text-[10px] text-inkMute font-body">DFW · ${escapeHtml(d.time)}</div>
+        </div>
+
+        <div class="rounded-sm p-3 lg:p-4 bg-ivory flex flex-col" style="border:1px solid rgba(26,22,18,0.06);">
+          <div class="text-[9px] uppercase-tight mb-2 text-inkMute font-body">Recommended pro</div>
+          <div class="text-[13px] lg:text-[14px] font-semibold mb-3 text-ink font-body flex-1">${escapeHtml(d.pro)}</div>
+          <button class="w-full text-left text-[10px] lg:text-[11px] font-semibold uppercase-tight px-3 py-2 rounded-sm flex items-center justify-between hover:opacity-90 bg-ink text-gold font-body">
+            <span>Get a quote</span>
+            ${icon('arrow-up-right', { size: 12 })}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDeficiencyRow(d) {
+  const sev = SEVERITY[d.severity];
+  const sys = SYSTEMS[d.system];
+  const isOpen = state.openId === d.id;
+  return `
+    <div data-row-id="${d.id}" class="border-b sev-${d.severity} ${isOpen ? 'row-open' : ''}"
+      style="border-color: rgba(26,22,18,0.06); background-color:${isOpen ? '#F7F2E7' : '#FCFAF4'};">
+      <button data-action="toggle-row" data-id="${d.id}"
+        class="w-full grid grid-cols-12 items-center gap-2 lg:gap-3 px-3 lg:px-6 py-3 lg:py-4 text-left hover:bg-black/[0.02] transition">
+        <div class="col-span-12 lg:col-span-4 flex items-center gap-2.5 lg:gap-3" style="min-width:0;">
+          <div class="sev-bar w-1 h-10 rounded-full flex-shrink-0"></div>
+          <div style="min-width:0;flex:1;">
+            <div class="flex items-center gap-1.5 lg:gap-2 mb-1 flex-wrap">
+              ${severityBadge(d.severity)}
+              ${d.location ? `<span class="text-[10px] truncate text-inkMute font-body">· ${escapeHtml(d.location)}</span>` : ''}
+            </div>
+            <div class="text-[13px] lg:text-[14px] font-semibold leading-tight text-ink font-body">${escapeHtml(d.title)}</div>
+            <!-- Mobile-only: show system + section as a tiny line under title -->
+            <div class="lg:hidden text-[10px] text-inkMute font-body mt-0.5 truncate">
+              ${sys.label} · ${escapeHtml(d.section)}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-2 hidden lg:flex items-center gap-2">
+          ${icon(sys.icon, { size: 12, style: 'color:#7A6E5F;' })}
+          <span class="text-[11px] text-inkSoft font-body">${sys.label}</span>
+        </div>
+
+        <div class="col-span-2 hidden lg:block text-[11px] text-inkMute font-body">${escapeHtml(d.section)}</div>
+
+        <div class="col-span-2 hidden lg:block text-[11px] truncate text-inkSoft font-body">${escapeHtml(d.pro)}</div>
+
+        <div class="col-span-12 lg:col-span-2 flex items-center justify-end gap-2 lg:gap-3 mt-1 lg:mt-0">
+          <div class="text-right">
+            <div class="text-[13px] font-semibold tabular-nums text-ink font-body whitespace-nowrap">${range(d.costLow, d.costHigh)}</div>
+            <div class="text-[10px] text-inkMute font-body">est. · ${escapeHtml(d.time)}</div>
+          </div>
+          <div class="chev w-6 h-6 rounded-full flex items-center justify-center transition-transform flex-shrink-0"
+            style="background-color: rgba(26,22,18,0.05);">
+            ${icon('chevron-down', { size: 12, stroke: 2.5, style: 'color:#3D352C;' })}
+          </div>
+        </div>
+      </button>
+      ${isOpen ? renderDeficiencyDetail(d) : ''}
+    </div>
+  `;
+}
+
+function renderDeficiencyListSection() {
+  return `
+    <section class="bg-ivory">
+      ${renderFilterBar()}
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10 py-4">
+        <div class="flex items-end justify-between mb-5 lg:mb-6 pt-4">
+          <div>
+            <div class="text-[10px] uppercase-x font-semibold mb-2 text-goldDeep font-body">Section 03</div>
+            <h2 class="text-[28px] sm:text-[32px] lg:text-[44px] leading-tight fr-headline text-ink">Every finding, explained</h2>
+            <p class="text-[13px] lg:text-[14px] mt-2 max-w-2xl text-inkSoft font-body">
+              Tap any finding to see the AI's plain-English summary alongside the inspector's official note.
+            </p>
+          </div>
+        </div>
+
+        <div class="hidden lg:grid grid-cols-12 gap-3 px-4 lg:px-6 pb-2 text-[9px] uppercase-tight font-semibold text-inkMute font-body" style="border-bottom:1px solid rgba(26,22,18,0.08);">
+          <div class="col-span-4">Finding</div>
+          <div class="col-span-2">System</div>
+          <div class="col-span-2">Section</div>
+          <div class="col-span-2">Recommended pro</div>
+          <div class="col-span-2 text-right">Estimated cost</div>
+        </div>
+
+        <div id="deficiency-rows"></div>
+      </div>
+    </section>
+  `;
+}
+
+function updateDeficiencyRows() {
+  const filtered = getFilteredDeficiencies();
+  const container = document.getElementById('deficiency-rows');
+  if (!container) return;
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="py-20 text-center text-inkMute font-body">
+        ${icon('search', { size: 28, style: 'opacity:0.4;display:block;margin:0 auto 12px;' })}
+        <div class="text-[14px]">No findings match those filters.</div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = filtered.map(renderDeficiencyRow).join('');
+  }
+  // Update count
+  const countEl = document.getElementById('result-count');
+  if (countEl) countEl.textContent = filtered.length;
+  lucide.createIcons();
+}
+
+/* ===========================================================================
+   RENDER: NEGOTIATION STRATEGY
+   ======================================================================== */
+function renderNegotiation() {
+  const safety = data.deficiencies.filter(d => d.severity === 'safety');
+  const high = data.deficiencies.filter(d => d.severity === 'high');
+  const negotiable = [...safety, ...high];
+  const t = totals(negotiable);
+
+  // Empty state — no high/safety items
+  if (negotiable.length === 0) {
+    return `
+      <section class="py-12 lg:py-16 bg-ink text-cream">
+        <div class="max-w-[1400px] mx-auto px-4 lg:px-10 text-center">
+          <div class="text-[10px] uppercase-x font-semibold mb-3 text-gold font-body">AI-suggested negotiation strategy</div>
+          <h2 class="text-[24px] sm:text-[28px] lg:text-[36px] leading-tight mb-3 fr-headline" style="color:rgba(247,242,231,0.85);">
+            ${data.deficiencies.length === 0 ? 'No findings to negotiate yet' : 'No high-priority items to negotiate'}
+          </h2>
+          <p class="text-[13px] lg:text-[14px] max-w-lg mx-auto font-body" style="color:rgba(247,242,231,0.5);">
+            ${data.deficiencies.length === 0
+              ? 'Upload a customer data file with findings to see negotiation strategy.'
+              : 'This report has only routine and DIY items — typically not worth negotiating with the seller.'}
+          </p>
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="py-12 lg:py-16 bg-ink text-cream">
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10">
+        <div class="grid grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div class="col-span-12 lg:col-span-7">
+            <div class="text-[10px] uppercase-x font-semibold mb-3 text-gold font-body">AI-suggested negotiation strategy</div>
+            <h2 class="text-[28px] sm:text-[34px] lg:text-[52px] leading-[1.05] mb-4 lg:mb-5 fr-headline">
+              You're walking in with a <em class="fr-num" style="font-style:italic;">${negotiable.length}-item</em> case.
+            </h2>
+            <p class="text-[14px] lg:text-[15px] leading-relaxed mb-3 max-w-xl font-body" style="color:rgba(247,242,231,0.8);">
+              Combining the safety items and high-priority repairs gives you a clear, defensible ask in the option period. We've grouped them by who fixes them so your agent can pull quotes fast.
+            </p>
+            <p class="text-[11px] leading-relaxed mb-5 lg:mb-6 max-w-xl font-body" style="color:rgba(247,242,231,0.4);">
+              <em>This strategy is AI-generated based on the official TREC report. Verify all figures with licensed contractors and consult your real estate agent before negotiating.</em>
+            </p>
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+              <button class="px-4 lg:px-5 py-3 text-[12px] font-semibold uppercase-tight rounded-sm flex items-center justify-center sm:justify-start gap-2 bg-gold text-ink font-body">
+                ${icon('download', { size: 13 })}
+                <span>Export packet</span>
+              </button>
+              <button class="px-4 lg:px-5 py-3 text-[12px] font-semibold uppercase-tight rounded-sm flex items-center justify-center sm:justify-start gap-2 border hover:bg-white/5 text-cream font-body" style="border-color: rgba(247,242,231,0.18);">
+                ${icon('share-2', { size: 13 })}
+                <span>Share with agent</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="col-span-12 lg:col-span-5">
+            <div class="rounded-sm p-5 lg:p-6 border" style="border-color: rgba(212,162,58,0.25); background-color: rgba(212,162,58,0.03);">
+              <div class="flex items-start justify-between gap-2 mb-3 flex-wrap">
+                <div class="text-[10px] uppercase-tight text-gold font-body">Suggested credit ask (est.)</div>
+                ${aiPoweredBadge(true)}
+              </div>
+              <div class="flex items-baseline gap-3 mb-4">
+                <span class="text-[40px] sm:text-[48px] lg:text-[64px] leading-none fr-num text-gold break-all">${fmt(t.high)}</span>
+              </div>
+              <div class="text-[11px] lg:text-[12px] mb-5 font-body" style="color:rgba(247,242,231,0.65);">
+                High-end of repair estimates · ${negotiable.length} qualifying items · Not a binding figure
+              </div>
+              <div class="space-y-2 pt-4 border-t" style="border-color: rgba(212,162,58,0.18);">
+                <div class="flex justify-between gap-2 text-[11px] lg:text-[12px] font-body">
+                  <span style="color:rgba(247,242,231,0.65);" class="truncate">Conservative (${fmt(t.low)})</span>
+                  <span class="font-semibold text-cream whitespace-nowrap">Floor</span>
+                </div>
+                <div class="flex justify-between gap-2 text-[11px] lg:text-[12px] font-body">
+                  <span style="color:rgba(247,242,231,0.65);" class="truncate">Recommended (${fmt(Math.round((t.low + t.high) / 2))})</span>
+                  <span class="font-semibold text-gold whitespace-nowrap">Likely ask</span>
+                </div>
+                <div class="flex justify-between gap-2 text-[11px] lg:text-[12px] font-body">
+                  <span style="color:rgba(247,242,231,0.65);" class="truncate">Aggressive (${fmt(t.high)})</span>
+                  <span class="font-semibold text-cream whitespace-nowrap">Ceiling</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: FOOTER
+   ======================================================================== */
+function renderFooter() {
+  return `
+    <footer class="bg-cream">
+      <div class="border-t border-b" style="border-color: rgba(26,22,18,0.08);">
+        <div class="max-w-[1400px] mx-auto px-4 lg:px-10 py-8 lg:py-10">
+          <div class="grid grid-cols-12 gap-8">
+            <div class="col-span-12 lg:col-span-8">
+              <div class="flex items-center gap-3 mb-4">
+                ${icon('scale', { size: 16, style: 'color:#C97324;' })}
+                <span class="text-[10px] uppercase-x font-bold text-amber font-body">Liability disclaimer & TREC compliance</span>
+              </div>
+              <div class="space-y-3 text-[12px] leading-relaxed text-inkSoft font-body">
+                <p>The <strong>BPI Home Management Portal</strong> uses a proprietary <strong>AI-powered Inspection Report Analyzer</strong> to interpret the official TREC inspection report and provide informational context. The output of this tool is supplemental and does not constitute a real estate inspection.</p>
+                <p><strong class="text-ink">The official TREC REI 7-6 inspection report</strong>, performed by your TREC-licensed inspector under <strong>22 TAC §§535.227–535.233 (Texas Standards of Practice)</strong>, is the only authoritative record of this property's inspection. Where any conflict exists between the analyzer's output and the official report, <strong class="text-ink">the official report controls</strong>.</p>
+                <p><strong class="text-ink">All cost figures are estimates only</strong> based on typical Dallas–Fort Worth market pricing — they are not firm quotes, bids, or guarantees. <strong class="text-ink">Only a licensed contractor</strong> can provide a binding quote for any repair. Severity categorizations, action plans, and negotiation amounts are AI-generated suggestions for client consideration and are not professional advice.</p>
+                <p><strong class="text-ink">Buffalo Property Inspections is not liable</strong> for any decisions, negotiations, financial outcomes, or damages resulting from use of this analyzer. The tool is provided "as-is" without warranties of any kind. Always verify findings with qualified professionals and consult your real estate agent before acting.</p>
+                <button data-action="show-disclaimer" class="mt-2 inline-flex items-center gap-1.5 text-[11px] uppercase-tight font-semibold text-amber font-body hover:opacity-70">
+                  ${icon('file-warning', { size: 11 })}
+                  <span>Read full disclaimer</span>
+                  ${icon('arrow-right', { size: 11 })}
+                </button>
+              </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-4 space-y-4">
+              <div class="rounded-sm p-4 bg-ivory" style="border:1px solid rgba(26,22,18,0.08);">
+                <div class="text-[9px] uppercase-tight mb-2 text-inkMute font-body">Authoritative document</div>
+                <div class="flex items-start gap-2">
+                  ${icon('file-text', { size: 16, style: 'color:#1A1612;flex-shrink:0;margin-top:2px;' })}
+                  <div>
+                    <div class="text-[13px] font-semibold text-ink font-body">TREC Form REI 7-6</div>
+                    <div class="text-[10px] mt-0.5 text-inkMute font-body">Promulgated by Texas Real Estate Commission</div>
+                    <div class="text-[10px] text-inkMute font-body">Effective Feb 1, 2022</div>
+                  </div>
+                </div>
+              </div>
+              <div class="rounded-sm p-4 bg-ivory" style="border:1px solid rgba(26,22,18,0.08);">
+                <div class="text-[9px] uppercase-tight mb-2 text-inkMute font-body">Tool classification</div>
+                <div class="flex items-start gap-2">
+                  ${icon('sparkles', { size: 16, style: 'color:#A87C20;flex-shrink:0;margin-top:2px;' })}
+                  <div>
+                    <div class="text-[13px] font-semibold text-ink font-body">AI Powered Analysis</div>
+                    <div class="text-[10px] mt-0.5 text-inkMute font-body">BPI Personalized Profile · v1.0</div>
+                    <div class="text-[10px] text-inkMute font-body">Informational supplement only</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-[1400px] mx-auto px-4 lg:px-10 py-8 lg:py-10">
+        <div class="grid grid-cols-12 gap-8">
+          <div class="col-span-12 lg:col-span-5">
+            <div class="flex items-center gap-3 mb-4">
+              <img src="${LOGO_DATA_URL}" alt="BPI" width="56" height="56" class="block select-none" draggable="false" />
+              <div>
+                <div class="text-[18px] leading-none fr-tag" style="font-weight:600;">Buffalo Property Inspections</div>
+                <div class="text-[10px] uppercase-tight mt-1 text-inkMute font-body">DFW · Texas · Veteran Owned</div>
+              </div>
+            </div>
+            <p class="text-[12px] leading-relaxed max-w-md text-inkSoft font-body">
+              We inspect homes the way we'd want our own families' homes inspected — thoroughly, plainly, and on the side of the buyer.
+            </p>
+          </div>
+
+          <div class="col-span-6 lg:col-span-2">
+            <div class="text-[10px] uppercase-tight mb-3 text-inkMute font-body">Contact</div>
+            <div class="space-y-2 text-[12px] text-inkSoft font-body">
+              <a class="flex items-center gap-2 hover:text-black transition" href="tel:8177673740">${icon('phone', { size: 11 })} (817) 767-3740</a>
+              <a class="flex items-center gap-2 hover:text-black transition break-all" href="mailto:team@buffalopropertyinspections.com">${icon('mail', { size: 11, style: 'flex-shrink:0;' })} <span class="truncate">team@buffalopropertyinspections.com</span></a>
+            </div>
+          </div>
+
+          <div class="col-span-6 lg:col-span-2">
+            <div class="text-[10px] uppercase-tight mb-3 text-inkMute font-body">Portal</div>
+            <div class="space-y-2 text-[12px] text-inkSoft font-body">
+              <a class="block hover:text-black transition" href="#">Inspection Analyzer</a>
+              <a class="block opacity-50" href="#">Repair Estimates <span class="text-[9px] uppercase-tight">soon</span></a>
+              <a class="block opacity-50" href="#">Pro Network <span class="text-[9px] uppercase-tight">soon</span></a>
+              <button data-action="show-disclaimer" class="block hover:text-black transition text-left">Disclaimer & Terms</button>
+            </div>
+          </div>
+
+          <div class="col-span-12 lg:col-span-3">
+            <div class="text-[10px] uppercase-tight mb-3 text-inkMute font-body">Credentials</div>
+            <div class="flex items-center gap-3">
+              <div class="rounded-sm overflow-hidden flex flex-col items-center" style="background-color:#15659F; padding:8px 10px; border:1px solid rgba(26,22,18,0.08);">
+                <div class="text-white text-[10px] font-bold leading-none mb-0.5">BBB</div>
+                <div class="text-white text-[7px] uppercase-tight leading-none">ACCREDITED</div>
+                <div class="text-white text-[7px] uppercase-tight leading-none">BUSINESS</div>
+              </div>
+              <div class="rounded-sm px-3 py-2" style="border:1px solid rgba(26,22,18,0.1);">
+                <div class="text-[8px] uppercase-tight text-inkMute font-body">TREC</div>
+                <div class="text-[11px] font-semibold text-ink font-mono">#${escapeHtml(data.inspection.trecLicense || '—')}</div>
+              </div>
+              <div class="rounded-sm px-3 py-2 flex flex-col items-center" style="border:1px solid rgba(26,22,18,0.1);">
+                ${icon('award', { size: 14, style: 'color:#D4A23A;' })}
+                <div class="text-[8px] uppercase-tight mt-0.5 text-inkMute font-body">Vet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 pt-6 border-t flex flex-col md:flex-row items-center justify-between gap-3" style="border-color: rgba(26,22,18,0.06);">
+          <div class="text-[10px] text-inkMute font-body">© 2026 Buffalo Property Inspections. All rights reserved. Repair estimates are non-binding and based on typical DFW market pricing.</div>
+          <div class="text-[10px] text-inkMute font-body">Inspection performed under TREC SOP §535.227–535.233 · Form REI 7-6</div>
+        </div>
+      </div>
+    </footer>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: DISCLAIMER MODAL
+   ======================================================================== */
+function disclaimerItem(iconName, title, color, body) {
+  return `
+    <div class="flex items-start gap-3.5">
+      <div class="w-9 h-9 rounded-sm flex items-center justify-center flex-shrink-0" style="background-color:${color}1A; color:${color};">
+        ${icon(iconName, { size: 16 })}
+      </div>
+      <div class="flex-1" style="min-width:0;">
+        <h4 class="text-[14px] font-semibold mb-1 text-ink font-body">${title}</h4>
+        <p class="text-[12.5px] leading-relaxed text-inkSoft font-body">${body}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderDisclaimerModal(dismissible = false) {
+  return `
+    <div id="disclaimer-modal" class="fixed inset-0 z-40 flex items-end sm:items-center justify-center sm:p-4 modal-backdrop fade-in">
+      <div class="w-full sm:max-w-2xl flex flex-col rounded-t-lg sm:rounded-sm relative bg-ivory modal-card" style="max-height:95vh; border:1px solid rgba(26,22,18,0.18);">
+        ${dismissible ? `
+          <button data-action="close-disclaimer" aria-label="Close"
+            class="absolute top-3 right-3 sm:top-4 sm:right-4 w-9 h-9 rounded-full flex items-center justify-center transition hover:bg-black/5 z-10 text-inkSoft">
+            ${icon('x', { size: 16 })}
+          </button>` : ''
+        }
+        <!-- Header -->
+        <div class="px-5 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-5 border-b" style="border-color: rgba(26,22,18,0.06);">
+          <div class="flex items-start gap-3 sm:gap-4 mb-2 sm:mb-3 pr-8">
+            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-sm flex items-center justify-center flex-shrink-0 bg-amber text-white">
+              ${icon('scale', { size: 18 })}
+            </div>
+            <div>
+              <div class="text-[10px] uppercase-x font-semibold mb-1 text-amber font-body">Important — please read</div>
+              <h2 class="text-[20px] sm:text-[24px] leading-tight text-ink fr-headline" style="font-weight:500;">Liability disclaimer & terms of use</h2>
+            </div>
+          </div>
+        </div>
+        <!-- Scrollable content -->
+        <div id="disclaimer-scroll" class="flex-1 overflow-y-auto nice-scroll px-5 sm:px-8 py-5 sm:py-6 space-y-4 sm:space-y-5 font-body">
+          <p class="text-[13px] sm:text-[14px] leading-relaxed text-ink">
+            The <strong>BPI Home Management Portal</strong> includes a proprietary <strong style="color:#C97324;">AI-powered Inspection Report Analyzer</strong>. Before continuing, please understand the following:
+          </p>
+          ${disclaimerItem('scroll-text', 'The TREC inspection report is authoritative', '#1A1612',
+            `Your inspector's official <strong>TREC REI 7-6 report</strong>, governed by <strong>22 TAC §§535.227–535.233 (Standards of Practice)</strong>, is the only official record of this property inspection. The output of this analyzer is supplemental and does not replace, supersede, or alter that report in any way. <strong>If anything in this analyzer conflicts with the official report, the official report controls.</strong>`
+          )}
+          ${disclaimerItem('dollar-sign', 'Cost figures are estimates, not quotes', '#C97324',
+            `All repair costs displayed are <strong>AI-generated estimates</strong> based on typical Dallas–Fort Worth market pricing. They are <strong>not binding quotes</strong> and may differ significantly from actual contractor bids. <strong>Only a licensed professional can provide a firm repair quote</strong> after physically evaluating the property.`
+          )}
+          ${disclaimerItem('cpu', 'AI categorizations are suggestions', '#2F4858',
+            `Severity levels, action-plan buckets, negotiation amounts, and recommended professionals are <strong>computer-generated suggestions</strong> for your consideration. They are not professional advice. Use your own judgment and consult your real estate agent, attorney, and qualified contractors before taking action.`
+          )}
+          ${disclaimerItem('shield', 'Limitation of liability', '#8B2A1F',
+            `<strong>Buffalo Property Inspections is not liable</strong> for any decisions, financial outcomes, missed deficiencies, or damages resulting from use of this analyzer. The tool is provided "as-is" without warranties of any kind. By continuing, you agree to use the analyzer only as an informational supplement to the official inspection report.`
+          )}
+          ${disclaimerItem('sparkles', 'AI-powered analysis tool', '#A87C20',
+            `This analyzer is an AI-powered tool that helps interpret your TREC inspection report. The AI generates summaries, severity categorizations, and cost estimates based on the inspector's findings — these are computer-generated suggestions to assist your understanding, not professional advice. The official inspection report is always authoritative.`
+          )}
+          <div class="pt-3 sm:pt-4 mt-3 sm:mt-4 border-t flex items-start gap-2.5 text-[11px] sm:text-[12px] leading-relaxed text-inkSoft" style="border-color: rgba(26,22,18,0.06);">
+            ${icon('info', { size: 13, style: 'color:#7A6E5F;flex-shrink:0;margin-top:2px;' })}
+            <p>For questions about your inspection, contact your inspector ${data.inspection.inspector ? `<strong>${escapeHtml(data.inspection.inspector)}${data.inspection.trecLicense ? ` (TREC #${escapeHtml(data.inspection.trecLicense)})` : ''}</strong>` : '<strong>at Buffalo Property Inspections</strong>'} at <a class="underline" href="tel:8177673740">(817) 767-3740</a> or <a class="underline break-all" href="mailto:team@buffalopropertyinspections.com">team@buffalopropertyinspections.com</a>.</p>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div class="px-5 sm:px-8 py-4 sm:py-5 border-t flex items-center justify-between gap-3 bg-cream" style="border-color: rgba(26,22,18,0.06);">
+          <div id="disclaimer-status" class="text-[10px] text-inkMute font-body">↓ Scroll to read all</div>
+          <button id="disclaimer-accept" data-action="accept-disclaimer" disabled
+            class="px-4 sm:px-6 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-semibold uppercase-tight rounded-sm flex items-center gap-2 transition-all font-body whitespace-nowrap"
+            style="background-color: rgba(26,22,18,0.18); color: rgba(247,242,231,0.5); cursor:not-allowed;">
+            ${icon('check-circle-2', { size: 13 })}
+            <span>I accept</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ===========================================================================
+   RENDER: MAIN APP SHELL
+   ======================================================================== */
+function renderMainApp() {
+  return [
+    renderHeader(),
+    renderHero(),
+    renderStats(),
+    renderEstimatesStrip(),
+    renderActionPlan(),
+    renderSystemBreakdown(),
+    renderDeficiencyListSection(),
+    renderNegotiation(),
+    renderFooter(),
+  ].join('');
+}
+
+/* ===========================================================================
+   EVENT HANDLERS
+   ======================================================================== */
+function handleSystemToggle(systemKey) {
+  state.activeSystem = state.activeSystem === systemKey ? null : systemKey;
+  // Re-render system bars + filter bar (for active pill) + list
+  rerenderSection('system-section', renderSystemBreakdown());
+  rerenderSection('list-section', renderDeficiencyListSection());
+  updateDeficiencyRows();
+  attachListEventHandlers();
+}
+
+function handleRowToggle(id) {
+  state.openId = state.openId === id ? null : id;
+  updateDeficiencyRows();
+}
+
+function handleFilterToggle(severity) {
+  state.filters = state.filters.includes(severity)
+    ? state.filters.filter(s => s !== severity)
+    : [...state.filters, severity];
+  rerenderSection('list-section', renderDeficiencyListSection());
+  updateDeficiencyRows();
+  attachListEventHandlers();
+}
+
+function handleClearFilters() {
+  state.filters = [];
+  state.search = '';
+  state.activeSystem = null;
+  rerenderSection('system-section', renderSystemBreakdown());
+  rerenderSection('list-section', renderDeficiencyListSection());
+  updateDeficiencyRows();
+  attachListEventHandlers();
+}
+
+function handleClearSystem() {
+  state.activeSystem = null;
+  rerenderSection('system-section', renderSystemBreakdown());
+  rerenderSection('list-section', renderDeficiencyListSection());
+  updateDeficiencyRows();
+  attachListEventHandlers();
+}
+
+function handleSearch(value) {
+  state.search = value;
+  // Update count + clear button visibility without losing input focus
+  rerenderClearControl();
+  updateDeficiencyRows();
+}
+
+function handleSort(value) {
+  state.sortBy = value;
+  updateDeficiencyRows();
+}
+
+function rerenderClearControl() {
+  // Re-render just the right side of the filter bar to reflect state changes
+  // Simplest: full filter bar rerender — but search input would lose focus.
+  // Instead, just update the count and toggle clear button display.
+  const filterBar = document.getElementById('filter-bar');
+  if (!filterBar) return;
+  // Toggle existence of the "Clear" button
+  const right = filterBar.querySelector('.flex.items-center.gap-2');
+  if (!right) return;
+  // Easiest: just update the count via updateDeficiencyRows (already done)
+}
+
+function rerenderSection(sectionAttr, html) {
+  const el = document.querySelector(`[data-section="${sectionAttr}"]`);
+  if (el) {
+    el.outerHTML = `<div data-section="${sectionAttr}">${html}</div>`;
+    lucide.createIcons();
+  }
+}
+
+/* ===========================================================================
+   ATTACH HANDLERS
+   ======================================================================== */
+function attachListEventHandlers() {
+  const search = document.getElementById('search-input');
+  if (search) {
+    search.addEventListener('input', e => handleSearch(e.target.value));
+  }
+  const sort = document.getElementById('sort-select');
+  if (sort) {
+    sort.addEventListener('change', e => handleSort(e.target.value));
+  }
+}
+
+function attachGlobalHandlers() {
+  // Event delegation on app root
+  document.body.addEventListener('click', e => {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+    const action = target.dataset.action;
+    switch (action) {
+      case 'toggle-system':   handleSystemToggle(target.dataset.system); break;
+      case 'toggle-row':      handleRowToggle(target.dataset.id); break;
+      case 'toggle-filter':   handleFilterToggle(target.dataset.severity); break;
+      case 'clear-filters':   handleClearFilters(); break;
+      case 'clear-system':    handleClearSystem(); break;
+      case 'show-disclaimer': openDisclaimerModal(true); break;
+      case 'close-disclaimer': closeDisclaimerModal(); break;
+      case 'accept-disclaimer': acceptDisclaimer(); break;
+      case 'reset-app': resetApp(); break;
+      case 'start-upload': showUploadScreen(); break;
+      case 'back-to-welcome': showWelcomeScreen(); break;
+      case 'open-profile': openProfile(target.dataset.id); break;
+      case 'delete-profile': deleteProfile(target.dataset.id); break;
+      case 'follow-demo-link': handleFollowDemoLink(target.dataset.token); break;
+      case 'back-to-signin': showSignInScreen(); break;
+      case 'sign-out': handleSignOut(); break;
+    }
+  });
+}
+
+/* ===========================================================================
+   DISCLAIMER MODAL CONTROL
+   ======================================================================== */
+function showInitialDisclaimer() {
+  const host = document.getElementById('modal-host');
+  host.innerHTML = renderDisclaimerModal(false);
+  lucide.createIcons();
+  attachDisclaimerScrollHandler();
+}
+
+function openDisclaimerModal(dismissible) {
+  const host = document.getElementById('modal-host');
+  host.innerHTML = renderDisclaimerModal(dismissible);
+  lucide.createIcons();
+  attachDisclaimerScrollHandler();
+}
+
+function closeDisclaimerModal() {
+  document.getElementById('modal-host').innerHTML = '';
+}
+
+function acceptDisclaimer() {
+  // Both initial accept and re-opened accept just close the modal
+  closeDisclaimerModal();
+  disclaimerEverAccepted = true;
+  try { localStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+  if (state.phase === 'disclaimer') {
+    state.phase = 'app';
+  }
+}
+
+function attachDisclaimerScrollHandler() {
+  const scroll = document.getElementById('disclaimer-scroll');
+  const accept = document.getElementById('disclaimer-accept');
+  const status = document.getElementById('disclaimer-status');
+  if (!scroll || !accept) return;
+
+  function checkScroll() {
+    const atEnd = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 12;
+    if (atEnd) {
+      accept.disabled = false;
+      accept.style.backgroundColor = '#1A1612';
+      accept.style.color = '#D4A23A';
+      accept.style.cursor = 'pointer';
+      if (status) {
+        status.innerHTML = '<span style="color:#5A6B4A;">✓ All terms reviewed</span>';
+      }
+    }
+  }
+  // Initial check (in case content fits without scrolling)
+  setTimeout(() => {
+    if (scroll.scrollHeight <= scroll.clientHeight + 4) {
+      checkScroll();
+    }
+  }, 100);
+  scroll.addEventListener('scroll', checkScroll);
+}
+
+/* ===========================================================================
+   UPLOAD SCREEN — first thing user sees; accepts customer data files
+   ======================================================================== */
+/* ===========================================================================
+   PROFILE STORAGE — localStorage-backed client profiles (private to device)
+   ======================================================================== */
+const PROFILE_STORAGE_KEY = 'bpi-home-profiles';
+const SESSION_KEY = 'bpi-disclaimer-accepted';
+
+function loadProfiles() {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveProfile(profile) {
+  try {
+    const profiles = loadProfiles();
+    const idx = profiles.findIndex(p => p.id === profile.id);
+    if (idx >= 0) profiles[idx] = profile;
+    else profiles.unshift(profile);
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+  } catch (e) {
+    console.warn('Could not save profile:', e);
+  }
+}
+
+function deleteProfileById(id) {
+  try {
+    const profiles = loadProfiles().filter(p => p.id !== id);
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+  } catch (e) {}
+}
+
+function generateProfileId() {
+  return 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8);
+}
+
+function relTime(iso) {
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + ' min ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + ' hr ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/* ===========================================================================
+   API LAYER — auth + profiles
+   ----------------------------------------------------------------------------
+   This is the abstraction boundary between the UI and the backend.
+
+   In this build, every method is backed by localStorage so the entire app
+   works offline as a single-device prototype. To wire a real backend later
+   (Supabase, Firebase, custom Node/Postgres, etc.), replace the bodies of
+   these methods with `fetch()` calls — the call sites in the rest of the
+   app should not need to change.
+
+   Conventions:
+   - All methods return Promises so the swap to async fetch() is mechanical.
+   - Errors throw with descriptive messages; callers wrap in try/catch.
+   - User-shape:    { id, email, role: 'admin' | 'client', name? }
+   - Profile-shape: existing fields + clientEmail + createdBy + createdAt
+
+   AUTH MODEL:
+   - Magic links are simulated. requestMagicLink stores a pending token in
+     localStorage and the UI surfaces a "Demo: open link" button. A real
+     backend would email this URL: <site>/?token=<token>
+   - Tokens expire after 15 min in this prototype.
+   - role is derived from email at verify-time (see ADMIN_DOMAINS).
+   ======================================================================== */
+
+// Emails matching ANY of these patterns are admin (inspector). Edit freely.
+// Patterns can be:
+//   '@buffalopropertyinspections.com'    → suffix match (any user at that domain)
+//   'specific.person@example.com'        → exact match
+const ADMIN_PATTERNS = [
+  '@buffalopropertyinspections.com',
+];
+
+const AUTH_USER_KEY    = 'bpi-auth-user';
+const AUTH_PENDING_KEY = 'bpi-auth-pending';   // pending magic-link tokens
+const TOKEN_TTL_MS     = 15 * 60 * 1000;       // 15 min
+
+function _isAdminEmail(email) {
+  if (!email) return false;
+  const e = String(email).trim().toLowerCase();
+  return ADMIN_PATTERNS.some(p => {
+    if (p.startsWith('@')) return e.endsWith(p);
+    return e === p.toLowerCase();
+  });
+}
+
+function _normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function _isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(_normalizeEmail(email));
+}
+
+function _generateToken() {
+  return 't-' + Date.now().toString(36) + '-' +
+         Math.random().toString(36).substring(2, 10) + '-' +
+         Math.random().toString(36).substring(2, 10);
+}
+
+function _generateUserId() {
+  return 'u-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8);
+}
+
+const auth = {
+  /* Request a magic link for an email. Returns { ok, demoToken, demoUrl }. */
+  requestMagicLink(emailRaw) {
+    return new Promise((resolve, reject) => {
+      const email = _normalizeEmail(emailRaw);
+      if (!_isValidEmail(email)) {
+        reject(new Error('Please enter a valid email address.'));
+        return;
+      }
+      const token = _generateToken();
+      const pending = auth._loadPending();
+      pending[token] = { email, createdAt: Date.now() };
+      auth._savePending(pending);
+      // Build the URL that a real email would contain
+      const base = window.location.origin + window.location.pathname;
+      const demoUrl = `${base}?token=${token}`;
+      resolve({ ok: true, demoToken: token, demoUrl, email });
+    });
+  },
+
+  /* Verify a magic-link token. Returns { user } on success. */
+  verifyMagicLink(token) {
+    return new Promise((resolve, reject) => {
+      if (!token) { reject(new Error('Missing token.')); return; }
+      const pending = auth._loadPending();
+      const entry = pending[token];
+      if (!entry) { reject(new Error('This link is invalid or has already been used.')); return; }
+      if (Date.now() - entry.createdAt > TOKEN_TTL_MS) {
+        delete pending[token];
+        auth._savePending(pending);
+        reject(new Error('This link has expired. Please request a new one.'));
+        return;
+      }
+      // Consume the token
+      delete pending[token];
+      auth._savePending(pending);
+      // Determine or create user
+      const role = _isAdminEmail(entry.email) ? 'admin' : 'client';
+      const user = {
+        id:    _generateUserId(),
+        email: entry.email,
+        role,
+        signedInAt: new Date().toISOString(),
+      };
+      try {
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      } catch (e) {}
+      resolve({ user });
+    });
+  },
+
+  getCurrentUser() {
+    try {
+      const raw = localStorage.getItem(AUTH_USER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  },
+
+  signOut() {
+    return new Promise(resolve => {
+      try { localStorage.removeItem(AUTH_USER_KEY); } catch (e) {}
+      resolve({ ok: true });
+    });
+  },
+
+  isAdminEmail: _isAdminEmail,
+
+  /* Internal: pending-token storage (cleans up expired on every read) */
+  _loadPending() {
+    try {
+      const raw = localStorage.getItem(AUTH_PENDING_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      // Garbage-collect expired tokens
+      const now = Date.now();
+      let dirty = false;
+      Object.keys(obj).forEach(k => {
+        if (now - obj[k].createdAt > TOKEN_TTL_MS) {
+          delete obj[k];
+          dirty = true;
+        }
+      });
+      if (dirty) auth._savePending(obj);
+      return obj;
+    } catch (e) { return {}; }
+  },
+  _savePending(obj) {
+    try { localStorage.setItem(AUTH_PENDING_KEY, JSON.stringify(obj)); } catch (e) {}
+  },
+};
+
+const profiles = {
+  /* List profiles visible to the current user.
+     - admin: all profiles
+     - client: only profiles where clientEmail matches user.email */
+  list() {
+    return new Promise(resolve => {
+      const user = auth.getCurrentUser();
+      const all = loadProfiles();
+      if (!user) { resolve([]); return; }
+      if (user.role === 'admin') { resolve(all); return; }
+      const mine = all.filter(p =>
+        _normalizeEmail(p.clientEmail) === _normalizeEmail(user.email)
+      );
+      resolve(mine);
+    });
+  },
+
+  get(id) {
+    return new Promise((resolve, reject) => {
+      const user = auth.getCurrentUser();
+      const all = loadProfiles();
+      const p = all.find(x => x.id === id);
+      if (!p) { reject(new Error('Profile not found.')); return; }
+      if (user && user.role === 'client' &&
+          _normalizeEmail(p.clientEmail) !== _normalizeEmail(user.email)) {
+        reject(new Error('You do not have access to this profile.'));
+        return;
+      }
+      resolve(p);
+    });
+  },
+
+  create(profileData) {
+    return new Promise(resolve => {
+      const user = auth.getCurrentUser();
+      const profile = {
+        ...profileData,
+        id:          profileData.id || generateProfileId(),
+        clientEmail: _normalizeEmail(profileData.clientEmail || (user && user.role === 'client' ? user.email : '')),
+        createdBy:   user ? user.email : 'system',
+        createdAt:   profileData.createdAt || new Date().toISOString(),
+      };
+      saveProfile(profile);
+      resolve(profile);
+    });
+  },
+
+  update(id, patch) {
+    return new Promise((resolve, reject) => {
+      const all = loadProfiles();
+      const idx = all.findIndex(p => p.id === id);
+      if (idx < 0) { reject(new Error('Profile not found.')); return; }
+      const updated = { ...all[idx], ...patch, id, updatedAt: new Date().toISOString() };
+      saveProfile(updated);
+      resolve(updated);
+    });
+  },
+
+  delete(id) {
+    return new Promise(resolve => {
+      deleteProfileById(id);
+      resolve({ ok: true });
+    });
+  },
+};
+
+/* One-time migration: stamp pre-auth profiles with a default ownership.
+   When a user first signs in, any existing profile without clientEmail/createdBy
+   gets assigned to the legacy admin email so it remains visible in the admin
+   dashboard. Ensures old localStorage data is not orphaned. */
+const LEGACY_ADMIN_EMAIL = 'legacy@buffalopropertyinspections.com';
+function migrateLegacyProfiles() {
+  try {
+    const all = loadProfiles();
+    let dirty = false;
+    all.forEach(p => {
+      if (!p.clientEmail && !p.createdBy) {
+        p.clientEmail = LEGACY_ADMIN_EMAIL;   // owned by admin pool, no client to log in
+        p.createdBy   = LEGACY_ADMIN_EMAIL;
+        p.createdAt   = p.uploadedAt || p.createdAt || new Date().toISOString();
+        p.legacy      = true;
+        dirty = true;
+      }
+    });
+    if (dirty) {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(all));
+    }
+  } catch (e) {}
+}
+
+/* ===========================================================================
+   WELCOME SCREEN — first thing the client sees
+   ======================================================================== */
+function renderWelcomeScreen() {
+  const user = auth.getCurrentUser();
+  const all = loadProfiles();
+  const visible = !user
+    ? []
+    : (user.role === 'admin'
+        ? all
+        : all.filter(p => String(p.clientEmail || '').toLowerCase() === String(user.email).toLowerCase()));
+  const hasProfiles = visible.length > 0;
+  const isAdmin = user && user.role === 'admin';
+
+  return `
+    <div id="welcome-screen" class="fixed inset-0 z-40 flex items-center justify-center bg-ink overflow-y-auto py-6 sm:py-10">
+      <svg class="absolute inset-0 opacity-[0.06]" width="100%" height="100%" aria-hidden="true">
+        <defs>
+          <pattern id="welgrid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#D4A23A" stroke-width="0.5"></path>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#welgrid)"></rect>
+      </svg>
+      <div class="absolute inset-0" style="background: radial-gradient(circle at center, transparent 0%, #1A1612 80%);"></div>
+
+      ${user ? `
+      <!-- Top-right: signed-in user pill + sign-out -->
+      <div class="absolute top-3 right-3 sm:top-5 sm:right-6 z-10 flex items-center gap-2">
+        <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-full" style="background: rgba(252,250,244,0.06); border: 1px solid rgba(252,250,244,0.1);">
+          <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style="background:#D4A23A; color:#1A1612;">
+            ${escapeHtml((user.email[0] || '?').toUpperCase())}
+          </div>
+          <span class="text-[11px] font-body truncate max-w-[160px] sm:max-w-[260px]" style="color: rgba(252,250,244,0.75);">${escapeHtml(user.email)}</span>
+          ${isAdmin ? `<span class="text-[8px] uppercase-tight font-bold px-1.5 py-0.5 rounded" style="background:#D4A23A;color:#1A1612;letter-spacing:0.12em;">Admin</span>` : ''}
+        </div>
+        <button data-action="sign-out" class="p-2 rounded-full hover:bg-white/5 active:bg-white/10 transition" title="Sign out" aria-label="Sign out" style="color: rgba(252,250,244,0.5);">
+          ${icon('log-out', { size: 14 })}
+        </button>
+      </div>` : ''}
+
+      <div class="relative w-full max-w-2xl px-4 sm:px-6">
+        <!-- Floating logo (no dark background) -->
+        <div class="flex flex-col items-center mb-6 sm:mb-8">
+          <img src="${LOGO_DATA_URL}" alt="BPI" width="84" height="84" class="block select-none sm:w-[104px] sm:h-[104px]" draggable="false" />
+          <div class="mt-5 sm:mt-7 text-center">
+            <div class="text-[10px] uppercase-x mb-2 sm:mb-3 font-body" style="color: rgba(212,162,58,0.7);">
+              Buffalo Property Inspections
+            </div>
+            <h1 class="text-[26px] sm:text-[32px] mb-2 fr-headline text-cream" style="line-height:1.1;">
+              ${hasProfiles ? 'Welcome back' : (isAdmin ? 'Inspector dashboard' : 'Welcome to your Home Portal')}
+            </h1>
+            <p class="text-[13px] sm:text-[14px] fr-italic mb-4" style="color: rgba(252,250,244,0.7);">
+              ${hasProfiles
+                ? (isAdmin ? `${visible.length} client ${visible.length === 1 ? 'profile' : 'profiles'} on this device` : 'Your personalized home profiles are ready')
+                : (isAdmin ? 'No client profiles yet — create the first one' : 'Create a personalized profile for your home')}
+            </p>
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+              ${aiPoweredBadge()}
+              <span class="text-[10px] uppercase-tight font-body" style="color: rgba(252,250,244,0.4); letter-spacing: 0.18em;">
+                ${isAdmin ? 'Inspector Console' : 'Personalized Profile'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        ${hasProfiles ? `
+          <!-- Saved profiles list -->
+          <div class="mb-5">
+            <div class="text-[10px] uppercase-x font-semibold mb-3 font-body flex items-center gap-2" style="color: rgba(212,162,58,0.7);">
+              ${icon('folder-lock', { size: 11, style: 'color:#D4A23A;flex-shrink:0;' })}
+              <span>${isAdmin ? 'All client profiles' : 'Your private profiles'}</span>
+              <div class="flex-1 h-px" style="background: rgba(212,162,58,0.2);"></div>
+              <span class="whitespace-nowrap" style="color: rgba(252,250,244,0.4);">${visible.length} ${visible.length === 1 ? 'profile' : 'profiles'}</span>
+            </div>
+            <div class="space-y-2">
+              ${visible.map(p => renderProfileCard(p, isAdmin)).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Create new profile CTA -->
+        <button data-action="start-upload"
+          class="w-full flex items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 rounded-sm transition-all hover:bg-white/5 active:bg-white/10 group"
+          style="background: linear-gradient(135deg, rgba(212,162,58,0.15), rgba(212,162,58,0.05)); border: 1px solid rgba(212,162,58,0.4);">
+          <div class="flex items-center gap-3 sm:gap-4 text-left min-w-0">
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-sm flex items-center justify-center flex-shrink-0" style="background: rgba(212,162,58,0.2); color: #D4A23A;">
+              ${icon('plus', { size: 22, stroke: 2 })}
+            </div>
+            <div class="min-w-0">
+              <div class="text-[14px] sm:text-[16px] font-semibold text-cream font-body">${
+                isAdmin
+                  ? (hasProfiles ? 'Create Another Client Profile' : 'Create First Client Profile')
+                  : (hasProfiles ? 'Create Another Profile' : 'Create Your Personalized Profile')
+              }</div>
+              <div class="text-[11px] font-body" style="color: rgba(252,250,244,0.6);">${isAdmin ? 'Onboard a new homeowner' : 'Upload your home inspection report'}</div>
+            </div>
+          </div>
+          ${icon('arrow-right', { size: 18, stroke: 2, style: 'color:#D4A23A;flex-shrink:0;' })}
+        </button>
+
+        <!-- Privacy & TREC footnotes -->
+        <div class="mt-5 sm:mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-[10px] leading-relaxed font-body" style="color: rgba(252,250,244,0.4);">
+          <div class="flex items-start gap-2">
+            ${icon('shield', { size: 11, style: 'flex-shrink:0;margin-top:2px;color:rgba(212,162,58,0.5);' })}
+            <p><strong style="color: rgba(252,250,244,0.65);">Private by design.</strong> Profiles are stored locally on this device only — never sent to BPI servers.</p>
+          </div>
+          <div class="flex items-start gap-2">
+            ${icon('shield-check', { size: 11, style: 'flex-shrink:0;margin-top:2px;color:rgba(212,162,58,0.5);' })}
+            <p><strong style="color: rgba(252,250,244,0.65);">TREC compliant.</strong> Analyzes the official TREC REI 7-6 inspection report under SOP §535.227–535.233.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderProfileCard(p, showOwner = false) {
+  const addr = p.property?.address || p.pdfFilename || 'Untitled profile';
+  const sub = [p.property?.city, p.property?.state].filter(Boolean).join(', ');
+  const findings = (p.deficiencies || []).length;
+  const created = p.uploadedAt ? relTime(p.uploadedAt) : (p.createdAt ? relTime(p.createdAt) : '');
+  return `
+    <div class="profile-card group flex items-center gap-3 px-3 sm:px-4 py-3 rounded-sm transition-all hover:bg-white/5 active:bg-white/10"
+      style="background: rgba(252,250,244,0.04); border: 1px solid rgba(252,250,244,0.08);">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 fr-tag font-bold text-[12px]" style="background:#D4A23A; color:#1A1612;">
+        ${escapeHtml(p.client?.initials || 'BP')}
+      </div>
+      <button data-action="open-profile" data-id="${escapeHtml(p.id)}" class="flex-1 text-left min-w-0">
+        <div class="text-[13px] font-semibold text-cream font-body truncate">${escapeHtml(addr)}</div>
+        <div class="text-[10px] font-body flex items-center gap-1.5 flex-wrap" style="color: rgba(252,250,244,0.45);">
+          ${sub ? `<span class="truncate">${escapeHtml(sub)}</span><span>·</span>` : ''}
+          <span class="whitespace-nowrap">${findings} ${findings === 1 ? 'finding' : 'findings'}</span>
+          ${created ? `<span>·</span><span class="whitespace-nowrap">${escapeHtml(created)}</span>` : ''}
+        </div>
+        ${showOwner && p.clientEmail ? `
+          <div class="text-[10px] font-mono mt-0.5 truncate" style="color: rgba(212,162,58,0.6);">
+            ${escapeHtml(p.clientEmail)}${p.legacy ? ' · legacy' : ''}
+          </div>
+        ` : ''}
+      </button>
+      <button data-action="open-profile" data-id="${escapeHtml(p.id)}" class="hidden sm:flex items-center gap-1 text-[10px] uppercase-tight font-semibold px-2.5 py-1.5 rounded transition" style="color:#D4A23A;">
+        ${icon('arrow-up-right', { size: 11 })}
+        <span>Open</span>
+      </button>
+      <button data-action="delete-profile" data-id="${escapeHtml(p.id)}" class="md:opacity-0 md:group-hover:opacity-100 transition p-2 rounded hover:bg-white/5 active:bg-white/10 flex-shrink-0" title="Delete profile" aria-label="Delete profile" style="color: rgba(252,250,244,0.45);">
+        ${icon('trash-2', { size: 14 })}
+      </button>
+    </div>
+  `;
+}
+
+/* ===========================================================================
+   UPLOAD SCREEN — PDF-only, framed as profile creation
+   ======================================================================== */
+function renderUploadScreen() {
+  return `
+    <div id="upload-screen" class="fixed inset-0 z-40 flex items-center justify-center bg-ink overflow-y-auto py-6 sm:py-10">
+      <svg class="absolute inset-0 opacity-[0.06]" width="100%" height="100%" aria-hidden="true">
+        <defs>
+          <pattern id="upgrid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#D4A23A" stroke-width="0.5"></path>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#upgrid)"></rect>
+      </svg>
+      <div class="absolute inset-0" style="background: radial-gradient(circle at center, transparent 0%, #1A1612 80%);"></div>
+
+      <div class="relative w-full max-w-2xl px-4 sm:px-6">
+        <!-- Back link -->
+        <button data-action="back-to-welcome" class="mb-4 sm:absolute sm:-top-6 sm:left-6 sm:mb-0 flex items-center gap-1.5 text-[11px] uppercase-tight font-semibold font-body transition hover:opacity-70 px-2 py-1 -mx-2" style="color: rgba(212,162,58,0.7);">
+          ${icon('chevron-left', { size: 12 })}
+          <span>Back</span>
+        </button>
+
+        <!-- Floating logo -->
+        <div class="flex flex-col items-center mb-6 sm:mb-7">
+          <img src="${LOGO_DATA_URL}" alt="BPI" width="72" height="72" class="block select-none sm:w-[88px] sm:h-[88px]" draggable="false" />
+          <div class="mt-5 sm:mt-6 text-center">
+            <div class="text-[10px] uppercase-x mb-2 font-body" style="color: rgba(212,162,58,0.7);">
+              Step 1 of 1 · Create Your Profile
+            </div>
+            <h1 class="text-[24px] sm:text-[28px] mb-2 fr-headline text-cream" style="line-height:1.15;">Your home, analyzed</h1>
+            <p class="text-[12px] sm:text-[13px] fr-italic" style="color: rgba(252,250,244,0.65);">
+              We'll create a personalized profile from your TREC inspection report
+            </p>
+          </div>
+        </div>
+
+        <!-- Drop zone -->
+        <div id="dropzone"
+          class="relative rounded-sm transition-all cursor-pointer group"
+          style="border: 2px dashed rgba(212,162,58,0.45); background: rgba(26,22,18,0.4); padding: 36px 20px;">
+          <input id="file-input" type="file" accept=".pdf,application/pdf" class="hidden" />
+          <div class="text-center">
+            <div class="inline-flex w-16 h-16 sm:w-20 sm:h-20 rounded-full items-center justify-center mb-4 sm:mb-5 transition-all group-hover:scale-105" style="background: linear-gradient(135deg, rgba(212,162,58,0.2), rgba(212,162,58,0.08)); color: #D4A23A;">
+              ${icon('file-up', { size: 28, stroke: 1.5 })}
+            </div>
+            <div class="text-[16px] sm:text-[20px] mb-2 fr-headline text-cream leading-tight">Upload Home Inspection Report as PDF</div>
+            <div class="text-[12px] mb-4 sm:mb-5 font-body" style="color: rgba(252,250,244,0.55);">
+              <span class="hidden sm:inline">Drag your file here or </span><span style="color:#D4A23A;text-decoration:underline;">tap to browse</span>
+            </div>
+            <div class="inline-flex items-center gap-2 text-[10px] uppercase-tight font-mono px-3 py-1.5 rounded-sm" style="background: rgba(252,250,244,0.05); color: rgba(252,250,244,0.55);">
+              ${icon('file-text', { size: 10, style: 'color:#D4A23A;' })}
+              <span>PDF only</span>
+              <span style="color: rgba(252,250,244,0.3);">·</span>
+              <span>TREC REI 7-6</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- What happens next — single column on mobile, 3-col on sm+ -->
+        <div class="mt-5 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+          ${[
+            { icon: 'sparkles', title: 'AI Analyzes',     sub: 'Findings extracted & categorized' },
+            { icon: 'list-checks', title: 'Action Plan',  sub: 'Prioritized for safety & cost' },
+            { icon: 'folder-lock', title: 'Private Profile', sub: 'Saved on your device only' },
+          ].map(s => `
+            <div class="rounded-sm p-3 flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 sm:text-center" style="background: rgba(252,250,244,0.03); border: 1px solid rgba(252,250,244,0.06);">
+              <div class="inline-flex w-8 h-8 sm:w-7 sm:h-7 rounded items-center justify-center sm:mb-2 flex-shrink-0" style="background: rgba(212,162,58,0.12); color: #D4A23A;">
+                ${icon(s.icon, { size: 13, stroke: 2 })}
+              </div>
+              <div class="flex-1">
+                <div class="text-[12px] sm:text-[11px] font-semibold text-cream font-body mb-0.5">${s.title}</div>
+                <div class="text-[10px] sm:text-[9px] font-body" style="color: rgba(252,250,244,0.5);">${s.sub}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- TREC footnote -->
+        <div class="mt-5 flex items-start gap-2.5 text-[10px] leading-relaxed font-body" style="color: rgba(252,250,244,0.35);">
+          ${icon('shield-check', { size: 11, style: 'flex-shrink:0;margin-top:2px;' })}
+          <p>This AI tool analyzes the inspector's official TREC REI 7-6 report. The official report and Texas SOP §535.227–535.233 remain the authoritative source. Cost figures are estimates only.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ===========================================================================
+   SIGN-IN SCREEN — magic-link auth (simulated, single-device prototype)
+   ======================================================================== */
+function renderSignInScreen(opts = {}) {
+  const errMsg = opts.error || '';
+  return `
+    <div id="signin-screen" class="fixed inset-0 z-40 flex items-center justify-center bg-ink overflow-y-auto py-6 sm:py-10">
+      <svg class="absolute inset-0 opacity-[0.06]" width="100%" height="100%" aria-hidden="true">
+        <defs>
+          <pattern id="signgrid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#D4A23A" stroke-width="0.5"></path>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#signgrid)"></rect>
+      </svg>
+      <div class="absolute inset-0" style="background: radial-gradient(circle at center, transparent 0%, #1A1612 80%);"></div>
+
+      <div class="relative w-full max-w-md px-4 sm:px-6">
+        <!-- Logo + headline -->
+        <div class="flex flex-col items-center mb-7">
+          <img src="${LOGO_DATA_URL}" alt="BPI" width="84" height="84" class="block select-none sm:w-[100px] sm:h-[100px]" draggable="false" />
+          <div class="mt-5 sm:mt-7 text-center">
+            <div class="text-[10px] uppercase-x mb-2 sm:mb-3 font-body" style="color: rgba(212,162,58,0.7);">
+              Buffalo Property Inspections
+            </div>
+            <h1 class="text-[26px] sm:text-[30px] mb-2 fr-headline text-cream" style="line-height:1.1;">
+              Sign in to your portal
+            </h1>
+            <p class="text-[13px] fr-italic" style="color: rgba(252,250,244,0.65);">
+              We'll email you a secure sign-in link
+            </p>
+          </div>
+        </div>
+
+        <!-- Email form -->
+        <form id="signin-form" class="rounded-sm p-5 sm:p-6 backdrop-blur-md" style="background: rgba(26,22,18,0.5); border: 1px solid rgba(212,162,58,0.25);">
+          <label for="signin-email" class="block text-[10px] uppercase-tight font-semibold mb-2 font-body" style="color: rgba(212,162,58,0.85); letter-spacing: 0.18em;">
+            Email address
+          </label>
+          <input
+            id="signin-email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder="you@example.com"
+            class="w-full px-3 py-3 text-[14px] rounded-sm focus:outline-none focus:ring-1 font-body"
+            style="background: rgba(252,250,244,0.06); color:#FCFAF4; border: 1px solid rgba(252,250,244,0.15); ring-color: #D4A23A;"
+            required
+          />
+          ${errMsg ? `
+            <div class="mt-3 flex items-start gap-2 text-[12px] font-body p-2.5 rounded-sm" style="background: rgba(139,42,31,0.18); color: rgba(247,200,195,0.95);">
+              ${icon('alert-circle', { size: 13, style: 'flex-shrink:0;margin-top:2px;' })}
+              <span>${escapeHtml(errMsg)}</span>
+            </div>
+          ` : ''}
+          <button
+            type="submit"
+            id="signin-submit"
+            class="mt-4 w-full px-4 py-3 text-[12px] font-semibold uppercase-tight rounded-sm flex items-center justify-center gap-2 hover:opacity-90 active:opacity-75 transition font-body"
+            style="background: #D4A23A; color: #1A1612;"
+          >
+            ${icon('mail', { size: 13, stroke: 2.5 })}
+            <span>Send sign-in link</span>
+          </button>
+          <div class="mt-3 text-[11px] text-center font-body" style="color: rgba(252,250,244,0.4);">
+            New to BPI Home Portal? A profile will be created for you on first sign-in.
+          </div>
+        </form>
+
+        <!-- Privacy footnote -->
+        <div class="mt-5 sm:mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-[10px] leading-relaxed font-body" style="color: rgba(252,250,244,0.4);">
+          <div class="flex items-start gap-2">
+            ${icon('shield', { size: 11, style: 'flex-shrink:0;margin-top:2px;color:rgba(212,162,58,0.5);' })}
+            <p><strong style="color: rgba(252,250,244,0.65);">No passwords.</strong> A magic link is sent to your inbox each time you sign in.</p>
+          </div>
+          <div class="flex items-start gap-2">
+            ${icon('lock', { size: 11, style: 'flex-shrink:0;margin-top:2px;color:rgba(212,162,58,0.5);' })}
+            <p><strong style="color: rgba(252,250,244,0.65);">Private by design.</strong> Each profile is visible only to its client and to BPI inspectors.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMagicLinkSent(emailAddr, demoUrl, demoToken) {
+  return `
+    <div id="signin-screen" class="fixed inset-0 z-40 flex items-center justify-center bg-ink overflow-y-auto py-6 sm:py-10">
+      <svg class="absolute inset-0 opacity-[0.06]" width="100%" height="100%" aria-hidden="true">
+        <defs>
+          <pattern id="sentgrid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#D4A23A" stroke-width="0.5"></path>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#sentgrid)"></rect>
+      </svg>
+      <div class="absolute inset-0" style="background: radial-gradient(circle at center, transparent 0%, #1A1612 80%);"></div>
+
+      <div class="relative w-full max-w-md px-4 sm:px-6">
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-7">
+          <div class="w-20 h-20 rounded-full flex items-center justify-center" style="background: rgba(212,162,58,0.15); border: 1px solid rgba(212,162,58,0.4); color: #D4A23A;">
+            ${icon('mail-check', { size: 30, stroke: 1.8 })}
+          </div>
+          <div class="mt-6 text-center">
+            <h1 class="text-[24px] sm:text-[28px] mb-2 fr-headline text-cream" style="line-height:1.15;">Check your email</h1>
+            <p class="text-[13px] fr-italic" style="color: rgba(252,250,244,0.65);">
+              We sent a sign-in link to
+            </p>
+            <p class="text-[14px] mt-1 font-mono" style="color: #D4A23A;">${escapeHtml(emailAddr)}</p>
+          </div>
+        </div>
+
+        <!-- Demo banner: would normally only appear in dev/staging, used here because no real email service is wired up -->
+        <div class="rounded-sm p-4 sm:p-5 mb-5" style="background: rgba(201,115,36,0.12); border: 1px solid rgba(201,115,36,0.4);">
+          <div class="flex items-start gap-2 mb-3">
+            ${icon('flask-conical', { size: 14, style: 'color:#F0D5B0;flex-shrink:0;margin-top:2px;' })}
+            <div>
+              <div class="text-[10px] uppercase-tight font-semibold font-body mb-1" style="color: #F0D5B0; letter-spacing: 0.18em;">Demo mode</div>
+              <p class="text-[12px] leading-relaxed font-body" style="color: rgba(252,250,244,0.7);">
+                No real email service is wired up yet. Use the button below to follow the link directly. In production this would arrive in your inbox within seconds.
+              </p>
+            </div>
+          </div>
+          <button
+            data-action="follow-demo-link"
+            data-token="${escapeHtml(demoToken)}"
+            class="w-full px-4 py-3 text-[12px] font-semibold uppercase-tight rounded-sm flex items-center justify-center gap-2 hover:opacity-90 active:opacity-75 transition font-body"
+            style="background: #C97324; color: #FCFAF4;"
+          >
+            ${icon('arrow-right-circle', { size: 13, stroke: 2.5 })}
+            <span>Open sign-in link</span>
+          </button>
+          <div class="mt-3 text-[10px] font-mono break-all" style="color: rgba(252,250,244,0.45);">
+            ${escapeHtml(demoUrl)}
+          </div>
+        </div>
+
+        <button data-action="back-to-signin" class="w-full text-[11px] uppercase-tight font-semibold font-body py-2 hover:opacity-70" style="color: rgba(212,162,58,0.7);">
+          ${icon('chevron-left', { size: 11 })} Use a different email
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+/* ===========================================================================
+   LOADING SCREEN — rendered on demand after upload
+   ======================================================================== */
+function renderLoadingScreenHTML() {
+  const sub = data.property.address ? `Analyzing ${escapeHtml(data.property.address)}` : 'Analyzing report';
+  return `
+    <div id="loading-screen" class="fixed inset-0 z-40 flex items-center justify-center bg-ink fade-in overflow-y-auto py-6">
+      <svg class="absolute inset-0 opacity-[0.06]" width="100%" height="100%" aria-hidden="true">
+        <defs>
+          <pattern id="loadgrid2" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#D4A23A" stroke-width="0.5"></path>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#loadgrid2)"></rect>
+      </svg>
+      <div class="absolute inset-0" style="background: radial-gradient(circle at center, transparent 0%, #1A1612 80%);"></div>
+
+      <div class="relative w-full max-w-xl px-4 sm:px-8">
+        <div class="flex flex-col items-center mb-8 sm:mb-10">
+          <div class="relative">
+            <img src="${LOGO_DATA_URL}" alt="BPI" width="96" height="96" class="block select-none sm:w-[120px] sm:h-[120px]" draggable="false" />
+            <div class="absolute inset-0 rounded-full brand-ping" style="border: 2px solid rgba(212,162,58,0.3);"></div>
+          </div>
+          <div class="mt-6 sm:mt-7 text-center">
+            <div class="text-[10px] uppercase-x mb-3 font-body" style="color: rgba(212,162,58,0.7);">${sub}</div>
+            <h1 class="text-[24px] sm:text-[28px] mb-2 fr-headline text-cream">Home Management Portal</h1>
+            <div class="flex items-center justify-center gap-2 flex-wrap">
+              ${aiPoweredBadge()}
+              <span class="text-[10px] uppercase-tight font-body" style="color: rgba(252,250,244,0.35); letter-spacing: 0.18em;">Inspection Analyzer</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-sm p-4 sm:p-6 backdrop-blur-md" style="background: rgba(26,22,18,0.5); border: 1px solid rgba(212,162,58,0.25);">
+          <ul id="loading-steps" class="space-y-2 mb-4 sm:mb-5 min-h-[140px] font-mono text-[11px] sm:text-[12px]"></ul>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[9px] uppercase-tight font-body" style="color: rgba(252,250,244,0.6); letter-spacing: 0.18em;">Analysis Progress</span>
+              <span id="loading-pct" class="text-[14px] tabular-nums font-mono font-semibold text-gold">0%</span>
+            </div>
+            <div class="h-1.5 rounded-full overflow-hidden" style="background: rgba(252,250,244,0.08);">
+              <div id="loading-bar" class="h-full rounded-full progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 sm:mt-6 flex items-start gap-2.5 text-[10px] leading-relaxed font-body" style="color: rgba(252,250,244,0.35);">
+          ${icon('info', { size: 11, style: 'flex-shrink:0;margin-top:2px;' })}
+          <p>This AI tool analyzes the inspector's official TREC REI 7-6 report. The official report and Texas SOP §535.227–535.233 remain the authoritative source. Cost figures are estimates only.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ===========================================================================
+   FILE HANDLING
+   ======================================================================== */
+function showToast(message, type = 'info') {
+  const host = document.getElementById('toast-host');
+  const colors = {
+    error: { bg: '#8B2A1F', icon: 'alert-triangle' },
+    info:  { bg: '#1A1612', icon: 'info' },
+    ok:    { bg: '#5A6B4A', icon: 'check-circle-2' },
+  };
+  const c = colors[type] || colors.info;
+  host.innerHTML = `
+    <div class="fixed top-3 left-3 right-3 sm:top-6 sm:right-6 sm:left-auto z-50 px-4 sm:px-5 py-3 rounded-sm flex items-center gap-3 text-[12px] font-body fade-in" style="background:${c.bg}; color:#FCFAF4; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width:380px; margin-left:auto;">
+      ${icon(c.icon, { size: 14, style: 'flex-shrink:0;' })}
+      <span>${escapeHtml(message)}</span>
+    </div>
+  `;
+  lucide.createIcons();
+  setTimeout(() => { host.innerHTML = ''; }, 4500);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const isPDF = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+
+  if (!isPDF) {
+    showToast('Please upload a PDF home inspection report', 'error');
+    return;
+  }
+
+  // Create a profile from the PDF. Since we can't parse PDFs reliably
+  // in-browser, we populate with the sample DEMO_DATA — in production this
+  // step would call BPI's backend to extract real findings from the report.
+  const user = auth.getCurrentUser();
+  const newProfile = {
+    id: generateProfileId(),
+    pdfFilename: file.name,
+    uploadedAt: new Date().toISOString(),
+    lastAccessedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    // Ownership stamps — admin-created profiles will get clientEmail filled
+    // in by the admin form in Build B; for now, client uploads stamp themselves.
+    clientEmail: user && user.role === 'client' ? user.email : '',
+    createdBy:   user ? user.email : 'system',
+    ...JSON.parse(JSON.stringify(DEMO_DATA)),
+  };
+
+  data = newProfile;
+  saveProfile(newProfile);
+  state.uploadedFileName = file.name;
+  showToast(`Profile created from ${file.name}`, 'ok');
+  startAnalysis();
+}
+
+/* ===========================================================================
+   PHASE TRANSITIONS
+   ======================================================================== */
+let disclaimerEverAccepted = false;
+try { disclaimerEverAccepted = localStorage.getItem(SESSION_KEY) === '1'; } catch (e) {}
+
+function clearAllPhaseHosts() {
+  document.getElementById('welcome-host')?.remove();
+  document.getElementById('signin-host')?.remove();
+  document.getElementById('upload-host').innerHTML = '';
+  document.getElementById('loading-host').innerHTML = '';
+  document.getElementById('modal-host').innerHTML = '';
+  const app = document.getElementById('app-root');
+  app.hidden = true;
+  app.innerHTML = '';
+}
+
+function showWelcomeScreen() {
+  state.phase = 'welcome';
+  clearAllPhaseHosts();
+  // Welcome screen needs its own host since upload-host is reused
+  let welcomeHost = document.getElementById('welcome-host');
+  if (!welcomeHost) {
+    welcomeHost = document.createElement('div');
+    welcomeHost.id = 'welcome-host';
+    document.body.insertBefore(welcomeHost, document.getElementById('upload-host'));
+  }
+  welcomeHost.innerHTML = renderWelcomeScreen();
+  lucide.createIcons();
+}
+
+/* ===========================================================================
+   AUTH SCREEN CONTROL
+   ======================================================================== */
+function showSignInScreen(opts = {}) {
+  state.phase = 'signin';
+  clearAllPhaseHosts();
+  let signinHost = document.getElementById('signin-host');
+  if (!signinHost) {
+    signinHost = document.createElement('div');
+    signinHost.id = 'signin-host';
+    document.body.insertBefore(signinHost, document.getElementById('upload-host'));
+  }
+  signinHost.innerHTML = renderSignInScreen(opts);
+  lucide.createIcons();
+  attachSignInHandlers();
+}
+
+function attachSignInHandlers() {
+  const form = document.getElementById('signin-form');
+  if (!form) return;
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const input = document.getElementById('signin-email');
+    const submitBtn = document.getElementById('signin-submit');
+    const email = input ? input.value : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+      submitBtn.style.cursor = 'wait';
+    }
+    auth.requestMagicLink(email).then(({ demoUrl, demoToken, email: norm }) => {
+      // Show "check your inbox" with demo button
+      const host = document.getElementById('signin-host');
+      if (host) {
+        host.innerHTML = renderMagicLinkSent(norm, demoUrl, demoToken);
+        lucide.createIcons();
+      }
+    }).catch(err => {
+      // Re-render with error
+      showSignInScreen({ error: err.message || 'Could not send link.' });
+      // Re-fill email
+      const input = document.getElementById('signin-email');
+      if (input) { input.value = email; input.focus(); }
+    });
+  });
+}
+
+function handleFollowDemoLink(token) {
+  if (!token) return;
+  auth.verifyMagicLink(token).then(({ user }) => {
+    showToast(`Signed in as ${user.email}`, 'ok');
+    afterSignIn();
+  }).catch(err => {
+    showToast(err.message || 'Could not verify link', 'error');
+    showSignInScreen({ error: err.message });
+  });
+}
+
+function handleSignOut() {
+  if (!confirm('Sign out of the BPI Home Portal?')) return;
+  auth.signOut().then(() => {
+    showToast('Signed out', 'info');
+    showSignInScreen();
+  });
+}
+
+/* Called after auth completes — runs migrations and routes to welcome screen.
+   In a future build, admin and client could route to different landing pages. */
+function afterSignIn() {
+  migrateLegacyProfiles();
+  showWelcomeScreen();
+}
+
+/* If a token is present in the URL, verify it and clean the URL.
+   Returns true if a verify was attempted (caller should not also show signin). */
+function tryVerifyTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (!token) return false;
+  // Strip token from URL so reload doesn't re-verify a consumed token
+  params.delete('token');
+  const newSearch = params.toString();
+  const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+  window.history.replaceState({}, '', newUrl);
+  // Attempt verify
+  auth.verifyMagicLink(token).then(({ user }) => {
+    showToast(`Signed in as ${user.email}`, 'ok');
+    afterSignIn();
+  }).catch(err => {
+    showSignInScreen({ error: err.message || 'Sign-in link failed.' });
+  });
+  return true;
+}
+
+function showUploadScreen() {
+  state.phase = 'upload';
+  clearAllPhaseHosts();
+  document.getElementById('upload-host').innerHTML = renderUploadScreen();
+  lucide.createIcons();
+  attachUploadHandlers();
+}
+
+function startAnalysis() {
+  state.phase = 'loading';
+  // Reset open/filter state for fresh customer
+  state.activeSystem = null;
+  state.openId = null;
+  state.filters = [];
+  state.search = '';
+  state.sortBy = 'severity';
+  // Clear other phase hosts, show loading
+  document.getElementById('welcome-host')?.remove();
+  document.getElementById('upload-host').innerHTML = '';
+  document.getElementById('loading-host').innerHTML = renderLoadingScreenHTML();
+  lucide.createIcons();
+  startLoadingAnimation(() => {
+    const loading = document.getElementById('loading-screen');
+    if (loading) {
+      loading.style.transition = 'opacity 0.5s ease';
+      loading.style.opacity = '0';
+    }
+    setTimeout(() => {
+      document.getElementById('loading-host').innerHTML = '';
+      bootApp();
+      if (!disclaimerEverAccepted) {
+        state.phase = 'disclaimer';
+        showInitialDisclaimer();
+      } else {
+        state.phase = 'app';
+      }
+    }, 500);
+  });
+}
+
+function openProfile(id) {
+  profiles.get(id).then(profile => {
+    data = profile;
+    data.lastAccessedAt = new Date().toISOString();
+    saveProfile(data);
+    // Skip loading animation when re-opening — go straight to app
+    clearAllPhaseHosts();
+    bootApp();
+    state.phase = 'app';
+  }).catch(err => {
+    showToast(err.message || 'Could not open profile', 'error');
+  });
+}
+
+function deleteProfile(id) {
+  profiles.get(id).then(profile => {
+    const label = profile.property?.address || profile.pdfFilename || 'this profile';
+    if (!confirm(`Delete the profile for "${label}"? This cannot be undone.`)) return;
+    return profiles.delete(id).then(() => {
+      showToast('Profile deleted', 'info');
+      showWelcomeScreen();
+    });
+  }).catch(err => {
+    showToast(err.message || 'Could not delete profile', 'error');
+  });
+}
+
+function resetApp() {
+  // From the app, "New Report" goes back to welcome (which lets them either
+  // open another saved profile or create a new one).
+  showWelcomeScreen();
+}
+
+function attachUploadHandlers() {
+  const dropzone = document.getElementById('dropzone');
+  const input = document.getElementById('file-input');
+  if (!dropzone || !input) return;
+
+  // Click anywhere on dropzone → open file picker
+  dropzone.addEventListener('click', () => input.click());
+
+  // File input change
+  input.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    input.value = '';
+  });
+
+  // Drag-and-drop
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.style.borderColor = '#D4A23A';
+      dropzone.style.background = 'rgba(212,162,58,0.08)';
+    });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.style.borderColor = 'rgba(212,162,58,0.45)';
+      dropzone.style.background = 'rgba(26,22,18,0.4)';
+    });
+  });
+  dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  });
+
+  // Allow drop anywhere on the upload screen
+  const uploadScreen = document.getElementById('upload-screen');
+  ['dragenter', 'dragover'].forEach(evt => {
+    uploadScreen.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+  });
+  uploadScreen.addEventListener('drop', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.target.closest('#dropzone')) {
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleFile(file);
+    }
+  });
+}
+
+/* ===========================================================================
+   INIT
+   ======================================================================== */
+function bootApp() {
+  const root = document.getElementById('app-root');
+  root.innerHTML = `
+    <div data-section="header-section">${renderHeader()}</div>
+    <div data-section="hero-section">${renderHero()}</div>
+    <div data-section="stats-section">${renderStats()}</div>
+    <div data-section="strip-section">${renderEstimatesStrip()}</div>
+    <div data-section="action-section">${renderActionPlan()}</div>
+    <div data-section="system-section">${renderSystemBreakdown()}</div>
+    <div data-section="list-section">${renderDeficiencyListSection()}</div>
+    <div data-section="negotiation-section">${renderNegotiation()}</div>
+    <div data-section="footer-section">${renderFooter()}</div>
+  `;
+  root.hidden = false;
+  lucide.createIcons();
+  updateDeficiencyRows();
+  attachListEventHandlers();
+}
+
+function init() {
+  attachGlobalHandlers();
+
+  // 1) If there's a magic-link token in the URL, try to verify it.
+  //    tryVerifyTokenFromUrl() handles success/failure routing internally.
+  if (tryVerifyTokenFromUrl()) return;
+
+  // 2) Otherwise, gate on the current user.
+  const user = auth.getCurrentUser();
+  if (user) {
+    afterSignIn();   // signed in → welcome
+  } else {
+    showSignInScreen();
+  }
+}
+
+// Start when DOM ready (script is at end of body, so DOM is ready)
+init();
+</script>
+
+</body>
+</html>
